@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polla El Fenix</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">SISTEMA APUESTA EL FÉNIX</h1>
+        <!-- Primera División: Marcador/Scoreboard -->
+        <div class="scoreboard-section">
+            <div class="days-container">
+                <div class="days-table">
+                    <div class="day-row">
+                        <div class="day-cell">lunes</div>
+                        <div class="day-value-cell" contenteditable="true" data-day="lunes"></div>
+                    </div>
+                    <div class="day-row">
+                        <div class="day-cell">martes</div>
+                        <div class="day-value-cell" contenteditable="true" data-day="martes"></div>
+                    </div>
+                    <div class="day-row">
+                        <div class="day-cell">miércoles</div>
+                        <div class="day-value-cell" contenteditable="true" data-day="miércoles"></div>
+                    </div>
+                    <div class="day-row">
+                        <div class="day-cell">jueves</div>
+                        <div class="day-value-cell" contenteditable="true" data-day="jueves"></div>
+                    </div>
+                    <div class="day-row">
+                        <div class="day-cell">viernes</div>
+                        <div class="day-value-cell" contenteditable="true" data-day="viernes"></div>
+                    </div>
+                    <div class="day-row">
+                        <div class="day-cell">sábado</div>
+                        <div class="day-value-cell" contenteditable="true" data-day="sábado"></div>
+                    </div>
+                    <div class="day-row">
+                        <div class="day-cell">domingo</div>
+                        <div class="day-value-cell" contenteditable="true" data-day="domingo"></div>
+                    </div>
+                    <div class="total-row">
+                        <div class="total-cell">total del pote</div>
+                    </div>
+                    <div class="value-row">
+                        <div class="value-cell" id="totalPotValue">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="board-section">
+                <div class="grid-board">
+                    <div class="board-title">SELECCIONAR NÚMEROS GANADORES</div>
+                    <div class="number-grid">
+                        <div class="number-cell red-cell">1</div>
+                        <div class="number-cell red-cell">2</div>
+                        <div class="number-cell red-cell">3</div>
+                        <div class="number-cell red-cell">4</div>
+                        <div class="number-cell red-cell">5</div>
+                        <div class="number-cell red-cell">6</div>
+                        <div class="number-cell red-cell">7</div>
+                        <div class="number-cell red-cell">8</div>
+                        <div class="number-cell red-cell">9</div>
+                        <div class="number-cell red-cell">10</div>
+                        <div class="number-cell red-cell">11</div>
+                        <div class="number-cell red-cell">12</div>
+                        <div class="number-cell red-cell">13</div>
+                        <div class="number-cell">14</div>
+                        <div class="number-cell">15</div>
+                        <div class="number-cell">16</div>
+                        <div class="number-cell">17</div>
+                        <div class="number-cell">18</div>
+                        <div class="number-cell">19</div>
+                        <div class="number-cell">20</div>
+                        <div class="number-cell">21</div>
+                        <div class="number-cell">22</div>
+                        <div class="number-cell">23</div>
+                        <div class="number-cell">24</div>
+                        <div class="number-cell">25</div>
+                        <div class="number-cell">26</div>
+                        <div class="number-cell">27</div>
+                        <div class="number-cell">28</div>
+                        <div class="number-cell">29</div>
+                        <div class="number-cell">30</div>
+                        <div class="number-cell">31</div>
+                        <div class="number-cell">32</div>
+                        <div class="number-cell">33</div>
+                        <div class="number-cell">34</div>
+                        <div class="number-cell">35</div>
+                        <div class="number-cell">36</div>
+                        <div class="number-cell green-cell">0</div>
+                        <div class="number-cell green-cell">00</div>
+                    </div>
+                </div>
+   
+        </div>
+            
+            
+        </div>
+
+        <!-- Tercera División: Tabla de Jugadores -->
+        <div class="players-section">
+            <div class="section-banner">
+                <h1>POLLA EL FENIX</h1>
+            </div>
+            
+            <div class="summary-stats">
+                <div class="stats-container">
+                    <!-- Grupo 1: Financiero -->
+                    <div class="stats-group financial-group">
+                        <h3 class="group-title">FINANCIERO</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">TOTAL</span>
+                                <span class="stat-value" id="totalValue">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">-20%</span>
+                                <span class="stat-value" id="menos20Value">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">POTE</span>
+                                <span class="stat-value" id="poteValue">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Grupo 2: Jugadores -->
+                    <div class="stats-group players-group">
+                        <h3 class="group-title">JUGADORES</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">JUGADAS</span>
+                                <span class="stat-value" id="playsCount">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">GRATIS</span>
+                                <span class="stat-value" id="gratisCount">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">GANADORES</span>
+                                <span class="stat-value" id="winnersCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Grupo 3: Premios -->
+                    <div class="stats-group prizes-group">
+                        <h3 class="group-title">PREMIOS</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">A REPARTIR</span>
+                                <span class="stat-value" id="prizesToDistribute">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">GARANTIZADO</span>
+                                <span class="stat-value" id="garantizadoValue">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">ACUMULADO</span>
+                                <span class="stat-value" id="acumuladoValue">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Grupo 4: Configuración -->
+                    <div class="stats-group config-group">
+                        <h3 class="group-title">CONFIGURACIÓN</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">VALOR</span>
+                                <span class="stat-value" id="valorJugada">30</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="buttons-container">
+                    <button onclick="openAddPlayerModal()" class="action-btn add-play-btn">+ AGREGAR JUGADA</button>
+                    <button onclick="openPlayerManagerModal()" class="action-btn add-player-btn">+ AGREGAR JUGADOR</button>
+          
+                    <button onclick="resetAll()" class="action-btn reset-btn">RESETEAR</button>
+                </div>
+            </div>
+
+            <!-- Leyenda de aciertos horizontal -->
+            <div class="hits-legend">
+                <div class="legend-title">LEYENDA DE ACIERTOS</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color winner-color"></div>
+                        <div class="legend-text">6 ACIERTOS (GANADOR)</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color five-color"></div>
+                        <div class="legend-text">5 ACIERTOS</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color four-color"></div>
+                        <div class="legend-text">4 ACIERTOS</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color three-color"></div>
+                        <div class="legend-text">3 ACIERTOS</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color two-color"></div>
+                        <div class="legend-text">2 ACIERTOS</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color one-color"></div>
+                        <div class="legend-text">1 ACIERTO</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color zero-color"></div>
+                        <div class="legend-text">0 ACIERTOS</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="players-table-container">
+                <table class="players-table">
+                    <thead>
+                        <tr>
+                            <th>##</th>
+                            <th>NOMBRE</th>
+                            <th>N°1</th>
+                            <th>N°2</th>
+                            <th>N°3</th>
+                            <th>N°4</th>
+                            <th>N°5</th>
+                            <th>N°6</th>
+                            <th># ACIERTOS</th>
+                            <th>GRATIS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersTableBody">
+                        <!-- Las filas se generarán automáticamente con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar jugador -->
+    <div id="addPlayerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>AGREGAR NUEVO JUGADOR</h2>
+                <span class="close" onclick="closeAddPlayerModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addPlayerForm">
+                    <div class="form-group">
+                        <label for="playerName">NOMBRE DEL JUGADOR:</label>
+                        <div class="autocomplete-container">
+                            <input type="text" id="playerName" placeholder="Escribe el nombre del jugador..." required autocomplete="off">
+                            <div id="autocompleteList" class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>NÚMEROS DEL JUGADOR (6 números):</label>
+                        <div class="numbers-grid">
+                            <input type="text" id="number1" placeholder="N°1" maxlength="2" required>
+                            <input type="text" id="number2" placeholder="N°2" maxlength="2" required>
+                            <input type="text" id="number3" placeholder="N°3" maxlength="2" required>
+                            <input type="text" id="number4" placeholder="N°4" maxlength="2" required>
+                            <input type="text" id="number5" placeholder="N°5" maxlength="2" required>
+                            <input type="text" id="number6" placeholder="N°6" maxlength="2" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gratis">GRATIS:</label>
+                        <select id="gratis">
+                            <option value="NO">NO</option>
+                            <option value="SÍ">SÍ</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" onclick="closeAddPlayerModal()" class="btn-cancel">CANCELAR</button>
+                        <button type="submit" class="btn-save">GUARDAR JUGADOR</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para gestionar jugadores -->
+    <div id="playerManagerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>GESTIONAR JUGADORES</h2>
+                <span class="close" onclick="closePlayerManagerModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newPlayerName">AGREGAR NUEVO JUGADOR:</label>
+                    <input type="text" id="newPlayerName" placeholder="Ej: Juan Pérez" maxlength="50">
+                    <button onclick="addPlayerToDatabase()" class="btn-save">AGREGAR</button>
+                </div>
+                
+                <div class="players-list">
+                    <h3>JUGADORES REGISTRADOS:</h3>
+                    <div id="playersList" class="players-grid">
+                        <!-- Lista de jugadores se generará automáticamente -->
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button onclick="closePlayerManagerModal()" class="btn-cancel">CERRAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
