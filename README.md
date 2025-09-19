@@ -1,48 +1,109 @@
-# Sistema Apuesta el Fénix 🎰
+# Sistema de Gestión de Apuestas "El Fénix" 🎰
 
-Este es un sistema de gestión para una apuesta o "polla" de lotería, diseñado para ser utilizado en un navegador web. Permite a los usuarios registrar jugadores, guardar tickets de apuestas, simular un sorteo, y llevar un registro de las estadísticas del juego y los ganadores.
-
----
-
-### Características Principales ✨
-
-* **Gestión de Jugadores** 👥: Agrega, edita y elimina jugadores.
-* **Registro de Apuestas (Tickets)** 🎫:
-    * Registra hasta **+1000 tickets** por sorteo.
-    * Asigna tickets a jugadores específicos.
-* **Simulación de Sorteo** 🔢:
-    * Ingresa los números ganadores del sorteo real.
-    * El sistema calcula automáticamente los aciertos de cada ticket y determina a los ganadores.
-* **Estadísticas en Tiempo Real** 📊: Muestra el total de jugadas, la cantidad de ganadores, y el monto total de premios a distribuir.
-* **Interfaz Intuitiva** 🎨: Diseñada para facilitar el registro rápido de información.
+Este proyecto es una aplicación web para la gestión de apuestas tipo "polla" de lotería. Permite registrar jugadores, administrar tickets, simular sorteos y visualizar estadísticas en tiempo real. Está diseñado para ser fácil de usar y flexible, ideal para grupos que organizan sorteos periódicos.
 
 ---
 
-### Tecnologías Utilizadas 💻
+## Características Principales
 
-* **HTML**: Estructura de la página web.
-* **CSS**: Estilos y diseño responsivo para una experiencia de usuario óptima en diferentes dispositivos.
-* **JavaScript**: Funcionalidad principal, lógica del juego y gestión de datos locales.
+- **Gestión de Jugadores:**  
+  Agrega, edita y elimina jugadores fácilmente desde la interfaz.
+
+- **Registro de Tickets:**  
+  Permite registrar cientos de tickets por sorteo, asignando cada uno a un jugador específico.
+
+- **Simulación de Sorteos:**  
+  Ingresa los números ganadores y el sistema calcula automáticamente los aciertos y determina los ganadores.
+
+- **Estadísticas en Tiempo Real:**  
+  Visualiza el total de jugadas, ganadores y premios a distribuir.
+
+- **Persistencia de Datos:**  
+  Utiliza Supabase para almacenar y consultar datos de jugadores y tickets.
+
+- **Interfaz Intuitiva y Responsive:**  
+  Adaptada para dispositivos móviles y escritorio.
 
 ---
 
-### ¿Cómo Usarlo? 🚀
+## Tecnologías Utilizadas
 
-1.  **Clonar el Repositorio**: Clona este repositorio en tu máquina local.
-2.  **Abrir el Archivo**: Abre el archivo `index.html` en tu navegador web preferido (Chrome, Firefox, Edge, etc.).
-3.  **Configurar Jugadores**: Utiliza el botón "**Gestionar Jugadores**" para añadir a los participantes de la apuesta.
-4.  **Registrar Tickets**:
-    * Ingresa el nombre del jugador. El sistema de autocompletado te ayudará a encontrar jugadores ya registrados.
-    * Ingresa los **6 números** del ticket en las casillas correspondientes.
-    * Haz clic en "**GUARDAR JUGADOR**" para registrar la jugada.
-5.  **Realizar el Sorteo**:
-    * Una vez que se haya jugado el sorteo real, ingresa los números ganadores en la sección de "**Sorteo**".
-    * Haz clic en "**SIMULAR SORTEO**" para que el sistema procese los resultados y muestre a los ganadores.
+- **HTML5**  
+- **CSS3**  
+- **JavaScript (ES6+)**  
+- **Supabase** (Base de datos y autenticación)
 
 ---
 
-### Estructura de Archivos 📁
+## Instalación y Uso
 
-* `index.html`: Contiene la estructura principal de la interfaz de usuario.
-* `style.css`: Archivo de estilos para el diseño y la presentación.
-* `main.js`: Lógica del sistema, incluyendo la gestión de jugadores, tickets, y la simulación del sorteo.
+1. **Clona el repositorio:**
+   ```
+   git clone https://github.com/Sneider22/polla_el_fenix.git
+   ```
+
+2. **Configura Supabase:**
+   - Crea un proyecto en [Supabase](https://supabase.com/).
+   - Copia tus credenciales en el archivo `supabase-config.js`.
+
+3. **Abre la aplicación:**
+   - Abre `index.html` en tu navegador preferido.
+
+4. **Gestiona jugadores y tickets:**
+   - Usa la interfaz para agregar jugadores y registrar tickets.
+   - Simula el sorteo ingresando los números ganadores.
+
+---
+
+## Estructura de Archivos
+
+```
+polla_el_fenix/
+│
+├── README.md                # Documentación del proyecto
+├── index.html               # Interfaz principal
+├── resultados.html          # Página de resultados y estadísticas
+├── style.css                # Estilos de la aplicación
+├── main.js                  # Lógica principal (gestión de jugadores, tickets y sorteos)
+├── resultados.js            # Lógica para mostrar resultados y estadísticas
+├── config.js                # Configuración general del sistema
+├── supabase-config.js       # Configuración de conexión a Supabase
+├── supabase-schema.sql      # Esquema de la base de datos (tablas y relaciones)
+```
+
+---
+
+## Ejemplo de Uso
+
+1. **Agregar Jugadores:**  
+   Ingresa el nombre y datos del jugador en la sección correspondiente.
+
+2. **Registrar Tickets:**  
+   Selecciona el jugador y registra los números de su ticket.
+
+3. **Simular Sorteo:**  
+   Ingresa los números ganadores y visualiza automáticamente los resultados y ganadores.
+
+---
+
+## Personalización
+
+- Puedes modificar el esquema de Supabase (`supabase-schema.sql`) para agregar más campos o reglas.
+- Personaliza los estilos en `style.css` para adaptar la apariencia a tus necesidades.
+
+---
+
+## Contribuciones
+
+¡Las contribuciones son bienvenidas!  
+Abre un issue o envía un pull request para sugerencias, mejoras o correcciones.
+
+---
+
+## Licencia
+
+Este proyecto está bajo la licencia MIT.
+
+---
+
+**Desarrollado por Sneider22 y rmaneiro28.**

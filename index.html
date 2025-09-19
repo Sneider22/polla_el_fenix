@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Polla El Fenix</title>
+<<<<<<< HEAD
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -241,10 +242,341 @@
                     </tbody>
                 </table>
             </div>
+=======
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'fenix-red': '#dc2626',
+                        'fenix-orange': '#ea580c',
+                        'fenix-yellow': '#fbbf24',
+                        'fenix-green': '#16a34a',
+                        'fenix-blue': '#2563eb',
+                        'fenix-purple': '#9333ea',
+                        'fenix-pink': '#db2777',
+                        'fenix-gray': '#6b7280'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-red-600 via-orange-500 to-red-700 min-h-screen">
+    <div class="container mx-auto p-4">
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-4xl font-bold text-white mb-2 drop-shadow-lg">SISTEMA APUESTA EL FÉNIX</h1>
+            <div class="bg-yellow-400 text-black px-4 py-2 rounded-lg inline-block font-bold">
+                POLLA EL FENIX
+            </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Left Sidebar - Days and Total -->
+            <div class="lg:col-span-1 space-y-4">
+                <!-- Days Section -->
+                <div class="bg-white rounded-lg shadow-lg p-4">
+                    <div class="space-y-2">
+                        <div class="grid grid-cols-2 gap-1">
+                            <div class="bg-blue-500 text-white text-center py-2 rounded text-sm font-semibold">lunes</div>
+                            <div class="bg-gray-100 border rounded p-2">
+                                <input type="number" class="w-full text-center border-none outline-none bg-transparent" data-day="lunes" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1">
+                            <div class="bg-blue-500 text-white text-center py-2 rounded text-sm font-semibold">martes</div>
+                            <div class="bg-gray-100 border rounded p-2">
+                                <input type="number" class="w-full text-center border-none outline-none bg-transparent" data-day="martes" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1">
+                            <div class="bg-blue-500 text-white text-center py-2 rounded text-sm font-semibold">miércoles</div>
+                            <div class="bg-gray-100 border rounded p-2">
+                                <input type="number" class="w-full text-center border-none outline-none bg-transparent" data-day="miércoles" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1">
+                            <div class="bg-blue-500 text-white text-center py-2 rounded text-sm font-semibold">jueves</div>
+                            <div class="bg-gray-100 border rounded p-2">
+                                <input type="number" class="w-full text-center border-none outline-none bg-transparent" data-day="jueves" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1">
+                            <div class="bg-blue-500 text-white text-center py-2 rounded text-sm font-semibold">viernes</div>
+                            <div class="bg-gray-100 border rounded p-2">
+                                <input type="number" class="w-full text-center border-none outline-none bg-transparent" data-day="viernes" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1">
+                            <div class="bg-blue-500 text-white text-center py-2 rounded text-sm font-semibold">sábado</div>
+                            <div class="bg-gray-100 border rounded p-2">
+                                <input type="number" class="w-full text-center border-none outline-none bg-transparent" data-day="sábado" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1">
+                            <div class="bg-blue-500 text-white text-center py-2 rounded text-sm font-semibold">domingo</div>
+                            <div class="bg-gray-100 border rounded p-2">
+                                <input type="number" class="w-full text-center border-none outline-none bg-transparent" data-day="domingo" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total del Pote -->
+                <div class="bg-green-500 rounded-lg shadow-lg p-4 text-center">
+                    <div class="text-white font-bold text-lg mb-2">total del pote</div>
+                    <div class="bg-white rounded-lg p-4">
+                        <div class="text-4xl font-bold text-green-600" id="totalPotValue">0</div>
+                    </div>
+                </div>
+
+                <!-- Color Legend -->
+                <div class="bg-white rounded-lg shadow-lg p-4">
+                    <div class="text-center font-bold mb-3 text-gray-800">LEYENDA</div>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-green-500 rounded"></div>
+                            <span>6 ACIERTOS</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-blue-500 rounded"></div>
+                            <span>5 ACIERTOS</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-orange-500 rounded"></div>
+                            <span>4 ACIERTOS</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-purple-500 rounded"></div>
+                            <span>3 ACIERTOS</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-pink-500 rounded"></div>
+                            <span>2 ACIERTOS</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-yellow-500 rounded"></div>
+                            <span>1 ACIERTO</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center - Numbers Grid -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="text-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">SELECCIONAR NÚMEROS GANADORES</h2>
+                    </div>
+                    <!-- Controles para números ganadores -->
+                    <div class="flex justify-center gap-4 mb-2">
+                        <button id="saveWinningNumbers" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">GUARDAR SELECCIÓN</button>
+                        <button id="clearWinningNumbers" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition-colors">LIMPIAR SELECCIÓN</button>
+                    </div>
+                    <div id="winnersMsg" class="text-center text-sm mb-4 h-5"></div>
+                    
+                    <!-- Numbers Grid -->
+                    <div class="grid max-md:grid-cols-6 md:grid-cols-12 gap-2 mb-6">
+                        <!-- Red numbers 1-13 -->
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">1</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">2</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">3</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">4</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">5</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">6</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">7</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">8</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">9</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">10</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">11</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">12</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-red-700 transition-colors number-cell">13</div>
+                        
+                        <!-- Black numbers 14-36 -->
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">14</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">15</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">16</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">17</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">18</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">19</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">20</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">21</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">22</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">23</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">24</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">25</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">26</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">27</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">28</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">29</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">30</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">31</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">32</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">33</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">34</div>
+                        <div class="bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">35</div>
+                        <div class="bg-red-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-gray-900 transition-colors number-cell">36</div>
+                        
+                        <!-- Green numbers 0 and 00 -->
+                        <div class="bg-green-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-green-700 transition-colors number-cell">0</div>
+                        <div class="bg-green-600 text-white w-12 h-12 flex items-center justify-center rounded-lg font-bold cursor-pointer hover:bg-green-700 transition-colors number-cell">00</div>
+                    </div>
+
+                    <!-- Value and Payment Info -->
+                    <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="bg-white rounded-lg p-3">
+                                <div class="text-sm text-gray-600">VALOR DE LA POLLA</div>
+                                <div class="text-2xl font-bold text-gray-800">30 BS</div>
+                                <div class="text-xs text-gray-500">POR JUGADA</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-3">
+                                <div class="text-sm text-gray-600">PAGO MÓVIL</div>
+                                <div class="text-sm font-semibold">0424-303-5092</div>
+                                <div class="text-sm font-semibold">27.863.570</div>
+                                <div class="text-xs text-gray-500">0134 - BANESCO</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Stats and Results -->
+            <div class="lg:col-span-1 space-y-4">
+                <!-- Stats Section -->
+                <div class="bg-white rounded-lg shadow-lg p-4">
+                    <div class="text-center font-bold mb-4 text-gray-800">ESTADÍSTICAS</div>
+                    
+                    <!-- Winners and Prize -->
+                    <div class="space-y-3">
+                        <div class="bg-orange-500 text-white rounded-lg p-3 text-center">
+                            <div class="text-sm">CANTIDAD DE GANADORES</div>
+                            <div class="text-2xl font-bold" id="winnersCount">149</div>
+                        </div>
+                        
+                        <div class="bg-orange-500 text-white rounded-lg p-3 text-center">
+                            <div class="text-sm">PREMIOS A REPARTIR</div>
+                            <div class="text-2xl font-bold" id="prizesToDistribute">24</div>
+                        </div>
+                        
+                        <div class="bg-orange-600 text-white rounded-lg p-4 text-center">
+                            <div class="text-sm">PREMIO</div>
+                            <div class="text-3xl font-bold" id="prizeAmount">5.616</div>
+                        </div>
+                    </div>
+
+                    <!-- Other Stats -->
+                    <div class="mt-4 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>TOTAL:</span>
+                            <span class="font-bold" id="totalValue">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>-20%:</span>
+                            <span class="font-bold" id="menos20Value">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>POTE:</span>
+                            <span class="font-bold" id="poteValue">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>JUGADAS:</span>
+                            <span class="font-bold" id="playsCount">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>GRATIS:</span>
+                            <span class="font-bold" id="gratisCount">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>GARANTIZADO:</span>
+                            <span class="font-bold" id="garantizadoValue">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>ACUMULADO:</span>
+                            <span class="font-bold" id="acumuladoValue">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="space-y-2">
+                    <button onclick="openAddPlayerModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        + AGREGAR JUGADA
+                    </button>
+                    <button id="saveTableButton" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        GUARDAR CAMBIOS EN TABLA
+                    </button>
+                    <button onclick="openPlayerManagerModal()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        + AGREGAR JUGADOR
+                    </button>
+                    <a href="resultados.html" class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-center">
+                        VER RESULTADOS
+                    </a>
+                    <button onclick="resetAll()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        RESETEAR
+                    </button>
+                </div>
+
+                <!-- Results Label -->
+                <div class="bg-gray-800 text-white rounded-lg p-2 text-center font-bold transform rotate-90 origin-center absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 hidden lg:block">
+                    RESULTADOS
+                </div>
+            </div>
+        </div>
+
+        <!-- Players Table Section -->
+        <div class="mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-green-600 text-white p-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold">POLLA</h2>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm">jugadas</span>
+                        <span class="bg-blue-600 px-3 py-1 rounded font-bold" id="tableJugadas">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Table Header -->
+            <div class="bg-green-500 text-white">
+                <div class="grid grid-cols-9 gap-2 p-2 text-center font-bold text-sm">
+                    <div class="bg-green-600 rounded p-2">#</div>
+                    <div class="bg-green-600 rounded p-2">NOMBRE</div>
+                    <div class="bg-green-600 rounded p-2">N°1</div>
+                    <div class="bg-green-600 rounded p-2">N°2</div>
+                    <div class="bg-green-600 rounded p-2">N°3</div>
+                    <div class="bg-green-600 rounded p-2">N°4</div>
+                    <div class="bg-green-600 rounded p-2">N°5</div>
+                    <div class="bg-green-600 rounded p-2">N°6</div>
+                    <div class="bg-green-600 rounded p-2">ACIERTOS</div>
+                </div>
+            </div>
+            
+            <!-- Table Body -->
+            <div class="max-h-96 overflow-y-auto">
+                <div id="playersTableBody" class="divide-y divide-gray-200">
+                    <!-- Example row -->
+                    <div class="grid grid-cols-9 gap-2 p-2 text-center text-sm hover:bg-gray-50">
+                        <div class="p-2 font-bold">58</div>
+                        <div class="p-2 font-semibold text-left">MIS WB</div>
+                        <div class="p-2 bg-green-100 font-bold">25</div>
+                        <div class="p-2 bg-green-100 font-bold">21</div>
+                        <div class="p-2 bg-green-100 font-bold">14</div>
+                        <div class="p-2 bg-green-100 font-bold">03</div>
+                        <div class="p-2">--</div>
+                        <div class="p-2">--</div>
+                        <div class="p-2 bg-green-500 text-white font-bold rounded">03</div>
+                    </div>
+                </div>
+            </div>
+>>>>>>> 13aa480 (Actualizacion, archivos de Rubel)
         </div>
     </div>
 
     <!-- Modal para agregar jugador -->
+<<<<<<< HEAD
     <div id="addPlayerModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -286,11 +618,65 @@
                         <button type="submit" class="btn-save">GUARDAR JUGADOR</button>
                     </div>
                 </form>
+=======
+    <div id="addPlayerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h2 class="text-xl font-bold text-gray-800">AGREGAR NUEVO JUGADOR</h2>
+                    <button onclick="closeAddPlayerModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form id="addPlayerForm">
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">NOMBRE DEL JUGADOR:</label>
+                            <div class="relative">
+                                <input type="text" id="playerName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Escribe el nombre del jugador..." required>
+                                <div id="autocompleteList" class="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 hidden"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">NÚMEROS DEL JUGADOR (6 números):</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <input type="text" id="number1" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°1" maxlength="2" required>
+                                <input type="text" id="number2" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°2" maxlength="2" required>
+                                <input type="text" id="number3" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°3" maxlength="2" required>
+                                <input type="text" id="number4" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°4" maxlength="2" required>
+                                <input type="text" id="number5" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°5" maxlength="2" required>
+                                <input type="text" id="number6" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°6" maxlength="2" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">GRATIS:</label>
+                            <select id="gratis" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="NO">NO</option>
+                                <option value="SÍ">SÍ</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button type="button" onclick="closeAddPlayerModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                                CANCELAR
+                            </button>
+                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                                GUARDAR JUGADOR
+                            </button>
+                        </div>
+                    </form>
+                </div>
+>>>>>>> 13aa480 (Actualizacion, archivos de Rubel)
             </div>
         </div>
     </div>
 
     <!-- Modal para gestionar jugadores -->
+<<<<<<< HEAD
     <div id="playerManagerModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -313,11 +699,81 @@
                 
                 <div class="form-actions">
                     <button onclick="closePlayerManagerModal()" class="btn-cancel">CERRAR</button>
+=======
+    <div id="playerManagerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h2 class="text-xl font-bold text-gray-800">GESTIONAR JUGADORES</h2>
+                    <button onclick="closePlayerManagerModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">AGREGAR NUEVO JUGADOR:</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="newPlayerName" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Juan Pérez" maxlength="50">
+                            <button onclick="addPlayerToDatabase()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                                AGREGAR
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3">JUGADORES REGISTRADOS:</h3>
+                        <div id="playersList" class="max-h-64 overflow-y-auto space-y-2">
+                            <!-- Lista de jugadores se generará automáticamente -->
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button onclick="closePlayerManagerModal()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                            CERRAR
+                        </button>
+                    </div>
+>>>>>>> 13aa480 (Actualizacion, archivos de Rubel)
                 </div>
             </div>
         </div>
     </div>
 
+<<<<<<< HEAD
     <script src="main.js"></script>
+=======
+    <!-- Modal para confirmar y guardar números ganadores -->
+    <div id="winnersModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h2 class="text-xl font-bold text-gray-800">CONFIRMAR NÚMEROS GANADORES</h2>
+                    <button onclick="closeWinnersModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div id="selectedWinnersDisplay" class="text-center text-2xl font-bold mb-4"></div>
+                    <div class="flex space-x-3">
+                        <button type="button" onclick="closeWinnersModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">CANCELAR</button>
+                        <button type="button" onclick="confirmWinnersModal()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">CONFIRMAR</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Librería de Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Configuración de la aplicación -->
+    <script src="config.js"></script>
+    <!-- Configuración de Supabase -->
+    <script src="supabase-config.js"></script>
+    <!-- Lógica principal de la aplicación -->
+    <script src="main.js"></script>
+     
+>>>>>>> 13aa480 (Actualizacion, archivos de Rubel)
 </body>
 </html>

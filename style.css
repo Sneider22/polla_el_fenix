@@ -1432,6 +1432,20 @@ body {
     }
 }
 
+<<<<<<< HEAD
+=======
+@media (max-width: 600px) {
+    .days-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+    .days-table {
+        margin: 0 auto;
+    }
+}
+>>>>>>> 13aa480 (Actualizacion, archivos de Rubel)
 @media (max-width: 480px) {
     .container {
         padding: 2px;
@@ -1561,3 +1575,16 @@ body {
         min-width: 160px;
     }
 }
+<<<<<<< HEAD
+=======
+
+.players-table td[contenteditable], .players-table td:focus {
+    background: #fffbe6;
+    border: 1px solid #ffa500;
+    outline: none;
+}
+.players-table td {
+    cursor: pointer;
+    min-width: 40px;
+}
+>>>>>>> 13aa480 (Actualizacion, archivos de Rubel)
