@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados - Polla El Fenix</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .results-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            padding: 5px;
+        }
+
+        .tab-btn {
+            padding: 10px 25px;
+            border: none;
+            background-color: transparent;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .tab-btn.active {
+            background-color: white;
+            color: #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .results-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .results-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .winning-numbers-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .winning-numbers-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .winning-numbers-grid {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .winning-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .results-table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow-x: auto;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: bold;
+            border: none;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .results-table td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+
+        .results-table tr:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .position-cell {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .winner-row {
+            background: linear-gradient(135deg, #c8e6c9, #a5d6a7) !important;
+            border: 2px solid #4CAF50;
+        }
+
+        .winner-row .position-cell {
+            color: #2e7d32;
+        }
+
+        .five-hits-row {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb) !important;
+            border: 2px solid #1976d2;
+        }
+
+        .four-hits-row {
+            background: linear-gradient(135deg, #fff3e0, #ffcc02) !important;
+            border: 2px solid #f57c00;
+        }
+
+        .three-hits-row {
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7) !important;
+            border: 2px solid #7b1fa2;
+        }
+
+        .two-hits-row {
+            background: linear-gradient(135deg, #fce4ec, #f8bbd9) !important;
+            border: 2px solid #c2185b;
+        }
+
+        .one-hit-row {
+            background: linear-gradient(135deg, #fffde7, #fff9c4) !important;
+            border: 2px solid #f9a825;
+        }
+
+        .hit-number {
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .miss-number {
+            background: #f5f5f5;
+            color: #666;
+            padding: 4px 8px;
+            border-radius: 15px;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .hits-badge {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .gratis-badge {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .navigation-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .stats-summary {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 768px) {
+            .results-title {
+                font-size: 2rem;
+            }
+            
+            .winning-number {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+            
+            .results-table th,
+            .results-table td {
+                padding: 8px 5px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="results-container">
+        <div class="results-header">
+            <h1 class="results-title">RESULTADOS POLLA EL FÉNIX</h1>
+            <p class="results-subtitle">Clasificación ordenada por número de aciertos</p>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab-btn active" data-game="polla">Polla (6 Números)</button>
+            <button class="tab-btn" data-game="micro">Micro (3 Números)</button>
+        </div>
+
+        <div class="winning-numbers-section">
+            <h2 class="winning-numbers-title">NÚMEROS GANADORES</h2>
+            <div class="winning-numbers-grid" id="winningNumbersGrid">
+                <!-- Los números ganadores se cargarán aquí -->
+            </div>
+        </div>
+
+        <div class="stats-summary">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPlayersResult">0</div>
+                    <div class="stat-label">Total Jugadores</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalWinnersResult">0</div>
+                    <div class="stat-label">Ganadores (6 aciertos)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPrizeResult">0</div>
+                    <div class="stat-label">Premio Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="prizePerWinnerResult">0</div>
+                    <div class="stat-label">Premio por Ganador</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-table-container">
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>POSICIÓN</th>
+                        <th>NOMBRE</th>
+                        <th>NÚMEROS JUGADOS</th>
+                        <th>ACIERTOS</th>
+                        <th>GRATIS</th>
+                        <th>PREMIO</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTableBody">
+                    <!-- Los resultados se cargarán aquí -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="navigation-buttons">
+            <a href="index.html" class="nav-btn">← VOLVER AL JUEGO</a>
+            <button onclick="exportResults()" class="nav-btn">EXPORTAR RESULTADOS</button>
+            <button onclick="printResults()" class="nav-btn">IMPRIMIR</button>
+        </div>
+    </div>
+
+    <!-- Librería de Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Configuración de la aplicación -->
+    <script src="config.js"></script>
+    <!-- Configuración de Supabase -->
+    <script src="supabase-config.js"></script>
+    <script src="resultados.js"></script>
+</body>
+</html>
