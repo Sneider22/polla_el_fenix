@@ -34,6 +34,12 @@
             </div>
         </div>
 
+        <!-- Game Mode Tabs -->
+        <div class="flex justify-center mb-6 bg-white/20 rounded-full p-1 max-w-sm mx-auto">
+            <button class="tab-btn flex-1 py-2 px-4 rounded-full font-bold text-white transition-all" data-game="polla">Polla (6 Números)</button>
+            <button class="tab-btn flex-1 py-2 px-4 rounded-full font-bold text-white transition-all" data-game="micro">Micro (3 Números)</button>
+        </div>
+
         <!-- Main Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <!-- Left Sidebar - Days and Total -->
@@ -95,7 +101,7 @@
                 </div>
 
                 <!-- Color Legend -->
-                <div class="bg-white rounded-lg shadow-lg p-4">
+                <div id="colorLegend" class="bg-white rounded-lg shadow-lg p-4">
                     <div class="text-center font-bold mb-3 text-gray-800">LEYENDA</div>
                     <div class="space-y-2 text-xs">
                         <div class="flex items-center gap-2">
@@ -292,7 +298,7 @@
         <div class="mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
             <div class="bg-green-600 text-white p-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold">POLLA</h2>
+                    <h2 id="gameModeTitle" class="text-xl font-bold">POLLA</h2>
                     <div class="flex items-center space-x-4">
                         <span class="text-sm">jugadas</span>
                         <span class="bg-blue-600 px-3 py-1 rounded font-bold" id="tableJugadas">0</span>
@@ -302,15 +308,15 @@
             
             <!-- Table Header -->
             <div class="bg-green-500 text-white">
-                <div class="grid grid-cols-9 gap-2 p-2 text-center font-bold text-sm">
+                <div id="playersTableHeader" class="grid grid-cols-9 gap-2 p-2 text-center font-bold text-sm">
                     <div class="bg-green-600 rounded p-2">#</div>
                     <div class="bg-green-600 rounded p-2">NOMBRE</div>
                     <div class="bg-green-600 rounded p-2">N°1</div>
                     <div class="bg-green-600 rounded p-2">N°2</div>
                     <div class="bg-green-600 rounded p-2">N°3</div>
-                    <div class="bg-green-600 rounded p-2">N°4</div>
-                    <div class="bg-green-600 rounded p-2">N°5</div>
-                    <div class="bg-green-600 rounded p-2">N°6</div>
+                    <div class="bg-green-600 rounded p-2 polla-only">N°4</div>
+                    <div class="bg-green-600 rounded p-2 polla-only">N°5</div>
+                    <div class="bg-green-600 rounded p-2 polla-only">N°6</div>
                     <div class="bg-green-600 rounded p-2">ACIERTOS</div>
                 </div>
             </div>
@@ -340,7 +346,7 @@
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
                 <div class="flex justify-between items-center p-6 border-b">
-                    <h2 class="text-xl font-bold text-gray-800">AGREGAR NUEVO JUGADOR</h2>
+                    <h2 id="addPlayerModalTitle" class="text-xl font-bold text-gray-800">AGREGAR NUEVA JUGADA</h2>
                     <button onclick="closeAddPlayerModal()" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -358,14 +364,20 @@
                         </div>
                         
                         <div class="mb-4">
-                            <label class="block text-sm font-bold text-gray-700 mb-2">NÚMEROS DEL JUGADOR (6 números):</label>
+                            <label id="addPlayerModalNumbersLabel" class="block text-sm font-bold text-gray-700 mb-2">NÚMEROS DEL JUGADOR (6 números):</label>
                             <div class="grid grid-cols-3 gap-2">
                                 <input type="text" id="number1" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°1" maxlength="2" required>
                                 <input type="text" id="number2" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°2" maxlength="2" required>
                                 <input type="text" id="number3" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°3" maxlength="2" required>
-                                <input type="text" id="number4" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°4" maxlength="2" required>
-                                <input type="text" id="number5" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°5" maxlength="2" required>
-                                <input type="text" id="number6" class="px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°6" maxlength="2" required>
+                                <div class="polla-only">
+                                    <input type="text" id="number4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°4" maxlength="2">
+                                </div>
+                                <div class="polla-only">
+                                    <input type="text" id="number5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°5" maxlength="2">
+                                </div>
+                                <div class="polla-only">
+                                    <input type="text" id="number6" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="N°6" maxlength="2">
+                                </div>
                             </div>
                         </div>
                         
@@ -382,7 +394,7 @@
                                 CANCELAR
                             </button>
                             <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                                GUARDAR JUGADOR
+                                GUARDAR JUGADA
                             </button>
                         </div>
                     </form>

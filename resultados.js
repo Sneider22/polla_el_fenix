@@ -19,21 +19,43 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     setupTabs();
     await loadAndDisplayData();
+
+    // Add search functionality
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            // No need to reload data, just re-display with filter
+            displayResults(); 
+        });
+    }
 });
 
 function setupTabs() {
     const tabs = document.querySelectorAll('.tab-btn');
+
+    const setActiveTab = (gameType) => {
+        tabs.forEach(t => {
+            if (t.dataset.game === gameType) {
+                t.classList.add('bg-white', 'text-fenix-blue');
+                t.classList.remove('text-white');
+            } else {
+                t.classList.remove('bg-white', 'text-fenix-blue');
+                t.classList.add('text-white');
+            }
+        });
+    };
+
+    // Set initial active tab
+    setActiveTab(currentGameType);
+
     tabs.forEach(tab => {
         tab.addEventListener('click', async () => {
-            // No hacer nada si el tab ya está activo
-            if (tab.classList.contains('active')) return;
+            const newGameType = tab.dataset.game;
+            if (newGameType === currentGameType) return;
 
-            // Cambiar estado visual
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-
-            // Actualizar tipo de juego y recargar datos
-            currentGameType = tab.dataset.game;
+            currentGameType = newGameType;
+            setActiveTab(currentGameType);
+            
             await loadAndDisplayData();
         });
     });
@@ -81,7 +103,8 @@ async function loadDataFromSupabase() {
                     
                     // Calcular aciertos
                     let hits = 0;
-                    playerNumbers.forEach(number => { if (winningNumbers.includes(number)) hits++; });
+                    const relevantWinningNumbers = currentGameType === 'micro' ? winningNumbers.slice(0, 3) : winningNumbers;
+                    playerNumbers.forEach(number => { if (relevantWinningNumbers.includes(number)) hits++; });
 
                     return {
                         id: ticket.id,
@@ -104,8 +127,8 @@ async function loadDataFromSupabase() {
             
             let prizeForMaxHits = 0;
             if (currentGameType === 'polla') {
-                // Para polla, el premio principal se reparte si hay ganadores con 3 o más aciertos
-                prizeForMaxHits = (maxHits >= 3 && winnersWithMaxHits.length > 0)
+                // Para polla, el premio principal se reparte si hay ganadores con 6 aciertos
+                prizeForMaxHits = (maxHits === 6 && winnersWithMaxHits.length > 0)
                     ? Math.floor(prizePool / winnersWithMaxHits.length)
                     : 0;
             } else { // micro
@@ -122,6 +145,11 @@ async function loadDataFromSupabase() {
 
             // Ordenar por aciertos (descendente) y luego por nombre
             resultsData.sort((a, b) => b.hits - a.hits || a.name.localeCompare(b.name));
+
+            // Añadir la posición después de ordenar
+            resultsData.forEach((player, index) => {
+                player.position = index + 1;
+            });
         }
     } catch (error) {
         console.error('Error al cargar datos de resultados desde Supabase:', error);
@@ -139,18 +167,6 @@ function calculatePrize(hits, isGratis, maxHits, prizeForMaxHits, gameType) {
         return prizeForMaxHits;
     }
     
-    // Premios fijos solo para el juego de polla (si no son el máximo)
-    if (gameType === 'polla') {
-        switch (hits) {
-            case 5:
-                return 50;
-            case 4:
-                return 20;
-            case 3:
-                return 10;
-        }
-    }
-    
     // No hay premios fijos para 'micro' en esta implementación, o para otros casos de 'polla'
     return 0;
 }
@@ -161,13 +177,13 @@ function displayWinningNumbers() {
     container.innerHTML = '';
 
     if (winningNumbers.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #666;">No se han seleccionado números ganadores</p>';
+        container.innerHTML = '<p class="text-center text-gray-500 col-span-full">No se han seleccionado números ganadores</p>';
         return;
     }
 
     winningNumbers.forEach(number => {
         const numberElement = document.createElement('div');
-        numberElement.className = 'winning-number';
+        numberElement.className = 'w-12 h-12 flex items-center justify-center rounded-full font-bold bg-yellow-400 text-black text-lg shadow-md';
         numberElement.textContent = number;
         container.appendChild(numberElement);
     });
@@ -180,8 +196,8 @@ function displaySummaryStats() {
     const payingPlayers = resultsData.filter(player => !player.gratis);
     const payingWinners = winnersWithMaxHits.filter(player => !player.gratis);
     
-    const totalPrize = payingPlayers.length * 30; // Asumiendo 30 BS por jugada para ambos
-    const prizePool = totalPrize * 0.8;
+    const totalPrize = payingPlayers.length * 30 * 0.8; // Asumiendo 30 BS por jugada para ambos
+    const prizePool = payingPlayers.length * 30 * 0.8;
     
     let prizePerWinner = 0;
     if (currentGameType === 'polla') {
@@ -196,96 +212,96 @@ function displaySummaryStats() {
     document.getElementById('totalPlayersResult').textContent = resultsData.length;
     
     // Actualizar dinámicamente el label de ganadores
-    const winnerLabel = document.querySelector('#totalWinnersResult + .stat-label');
+    const winnerLabel = document.getElementById('winnerLabel');
     if (winnerLabel) {
         winnerLabel.textContent = `Ganadores (${maxHits} aciertos)`;
     }
     document.getElementById('totalWinnersResult').textContent = winnersWithMaxHits.length;
     document.getElementById('totalPrizeResult').textContent = `${totalPrize} BS`;
-    document.getElementById('prizePerWinnerResult').textContent = prizePerWinner > 0 ? `${prizePerWinner} BS` : 'N/A';
+    document.getElementById('prizePerWinnerResult').textContent = prizePerWinner > 0 ? `${prizePerWinner} BS` : '0 BS';
 }
 
 // Mostrar tabla de resultados
-function displayResultsTable() {
+function displayResultsTable(dataToDisplay) {
     const tableBody = document.getElementById('resultsTableBody');
     tableBody.innerHTML = '';
 
-    if (resultsData.length === 0) {
+    if (dataToDisplay.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="6" style="text-align: center; padding: 40px; color: #666;">No hay datos de jugadores disponibles</td>';
+        const searchInput = document.getElementById('searchInput');
+        const searchTerm = searchInput ? searchInput.value.trim() : '';
+        if (searchTerm) {
+            row.innerHTML = '<td colspan="6" class="text-center py-10 text-gray-500">No se encontraron jugadores con ese nombre.</td>';
+        } else {
+            row.innerHTML = '<td colspan="6" class="text-center py-10 text-gray-500">No hay datos de jugadores disponibles</td>';
+        }
         tableBody.appendChild(row);
         return;
     }
 
-    resultsData.forEach((player, index) => {
+    dataToDisplay.forEach((player) => {
         const row = document.createElement('tr');
-        
-        // Aplicar clase CSS según aciertos
-        let rowClass = '';
-        const maxPossibleHits = currentGameType === 'polla' ? winningNumbers.length : 3;
+        row.className = 'bg-white border-b hover:bg-gray-50';
 
-        // Usar un switch solo si el jugador es un ganador principal o tiene aciertos significativos
+        // Aplicar color de fondo según aciertos, similar a la leyenda de index.html
+        let bgColorClass = '';
+        const maxPossibleHits = currentGameType === 'polla' ? 6 : 3;
+
         if (player.hits === maxPossibleHits && player.hits > 0) {
-            rowClass = 'winner-row';
-        } else {
+            bgColorClass = 'bg-[#02FF00]'; // Ganador principal
+        } else if (currentGameType === 'polla') { // Colores solo para polla
             switch (player.hits) {
-                case 5:
-                    rowClass = 'five-hits-row';
-                    break;
-                case 4:
-                    rowClass = 'four-hits-row';
-                    break;
-                case 3:
-                    rowClass = 'three-hits-row';
-                    break;
-                case 2:
-                    rowClass = 'two-hits-row';
-                    break;
-                case 1:
-                    rowClass = 'one-hit-row';
-                    break;
+                case 6: bgColorClass = 'bg-[#02FF00]'; break;
+                case 5: bgColorClass = 'bg-[#1275fb]'; break;
+                case 4: bgColorClass = 'bg-[#0077b6]'; break;
+                case 3: bgColorClass = 'bg-[#03b3d8]'; break;
+                case 2: bgColorClass = 'bg-[#4acae5]'; break;
+                case 1: bgColorClass = 'bg-[#91e0f0]'; break;
             }
         }
-        
-        if (rowClass) {
-            row.className = rowClass;
+        if (bgColorClass) {
+            row.classList.add(bgColorClass);
         }
 
-        // Crear celdas
+        // 1. Posición
         const positionCell = document.createElement('td');
-        positionCell.className = 'position-cell';
-        positionCell.textContent = index + 1;
+        positionCell.className = 'px-6 py-4 font-bold text-center text-gray-900';
+        positionCell.textContent = player.id;
         if (player.hits === maxPossibleHits && player.hits > 0) {
-            positionCell.innerHTML = `🏆 ${index + 1}`;
+            positionCell.innerHTML = `🏆 ${player.id}`;
         }
 
+        // 2. Nombre
         const nameCell = document.createElement('td');
+        nameCell.className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap';
         nameCell.textContent = player.name;
 
+        // 3. Números Jugados
         const numbersCell = document.createElement('td');
+        numbersCell.className = 'px-6 py-4 text-center';
+        const relevantWinningNumbers = currentGameType === 'micro' ? winningNumbers.slice(0, 3) : winningNumbers;
         numbersCell.innerHTML = player.numbers.map(number => {
-            const isHit = winningNumbers.includes(number);
-            return `<span class="${isHit ? 'hit-number' : 'miss-number'}">${number}</span>`;
+            const isHit = relevantWinningNumbers.includes(number);
+            const numberClass = isHit 
+                ? 'bg-green-500 text-white' 
+                : 'bg-gray-200 text-gray-800';
+            return `<span class="inline-block font-bold text-xs px-2 py-1 rounded-full ${numberClass}">${number}</span>`;
         }).join(' ');
 
+        // 4. Aciertos
         const hitsCell = document.createElement('td');
-        hitsCell.innerHTML = `<span class="hits-badge">${player.hits}</span>`;
+        hitsCell.className = 'px-6 py-4 text-center';
+        hitsCell.innerHTML = `<span class="bg-blue-600 text-white text-sm font-bold px-3 py-1 rounded-full">${player.hits}</span>`;
 
-        const gratisCell = document.createElement('td');
-        if (player.gratis) {
-            gratisCell.innerHTML = '<span class="gratis-badge">SÍ</span>';
-        } else {
-            gratisCell.textContent = 'NO';
-        }
-
+        // 5. Premio
         const prizeCell = document.createElement('td');
+        prizeCell.className = 'px-6 py-4 text-center font-bold';
         if (player.prize > 0) {
-            prizeCell.innerHTML = `<strong>${player.prize} BS</strong>`;
-            prizeCell.style.color = '#4CAF50';
-            prizeCell.style.fontWeight = 'bold';
+            prizeCell.textContent = `${player.prize} BS`;
+            prizeCell.className += ' text-black';
         } else {
             prizeCell.textContent = '-';
-            prizeCell.style.color = '#666';
+            prizeCell.className += ' text-gray-500';
         }
 
         // Agregar celdas a la fila
@@ -293,7 +309,6 @@ function displayResultsTable() {
         row.appendChild(nameCell);
         row.appendChild(numbersCell);
         row.appendChild(hitsCell);
-        row.appendChild(gratisCell);
         row.appendChild(prizeCell);
 
         tableBody.appendChild(row);
@@ -304,20 +319,41 @@ function displayResultsTable() {
 function displayResults() {
     displayWinningNumbers();
     displaySummaryStats();
-    displayResultsTable();
+
+    const searchInput = document.getElementById('searchInput');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    let filteredData = resultsData;
+    if (searchTerm) {
+        filteredData = resultsData.filter(player => 
+            player.name.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    displayResultsTable(filteredData);
 }
 
 // Exportar resultados a CSV
 function exportResults() {
-    if (resultsData.length === 0) {
+    const searchInput = document.getElementById('searchInput');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    let dataToExport = resultsData;
+    if (searchTerm) {
+        dataToExport = resultsData.filter(player => 
+            player.name.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    if (dataToExport.length === 0) {
         alert('No hay datos para exportar');
         return;
     }
 
     let csvContent = 'Posición,Nombre,Números,Aciertos,Gratis,Premio\n';
     
-    resultsData.forEach((player, index) => {
-        const position = index + 1;
+    dataToExport.forEach((player) => {
+        const position = player.position;
         const numbers = player.numbers.join('-');
         const gratis = player.gratis ? 'SÍ' : 'NO';
         const prize = player.prize > 0 ? `${player.prize} BS` : '-';

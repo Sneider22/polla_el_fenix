@@ -5,6 +5,7 @@ let prizesToDistribute = 0;
 let winningNumbers = new Set(); // Números ganadores seleccionados
 let players = []; // Array para almacenar datos de jugadores
 let playersDatabase = []; // Base de datos local de nombres de jugadores
+let currentGameType = 'polla'; // 'polla' o 'micro'
 let ticketsDatabase = []; // Base de datos local de tickets/jugadas
 
 // Inicialización cuando se carga la página
@@ -68,6 +69,8 @@ async function initializeGame() {
     // Inicializar contadores
     playsCount = 0;
     winnersCount = 0;
+    setupTabs();
+    updateUIForGameType();
     prizesToDistribute = 0;
     prizeAmount = 0;
 
@@ -91,19 +94,23 @@ function generateInitialTableRows() {
     const tableBody = document.getElementById('playersTableBody');
     tableBody.innerHTML = ''; // Limpiar tabla existente
     
+    const isPolla = currentGameType === 'polla';
+    const gridColsClass = isPolla ? 'grid-cols-9' : 'grid-cols-6';
+
     // Generar 500 filas iniciales
     for (let i = 1; i <= 500; i++) {
         const row = document.createElement('div');
-        row.className = 'grid grid-cols-9 gap-2 p-2 text-center text-sm hover:bg-gray-50 border-b border-gray-100';
+        row.className = `grid ${gridColsClass} gap-2 p-2 text-center text-sm hover:bg-gray-50 border-b border-gray-100`;
+        row.dataset.rowId = i; // ID de fila estable
         row.innerHTML = `
             <div class="p-2 font-bold">${i}</div>
             <div class="p-2 text-left cursor-pointer hover:bg-gray-100 rounded" data-editable="name"></div>
             <div class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="0"></div>
             <div class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="1"></div>
             <div class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="2"></div>
-            <div class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="3"></div>
-            <div class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="4"></div>
-            <div class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="5"></div>
+            <div class="p-2 cursor-pointer hover:bg-gray-100 rounded polla-only" data-editable="number" data-index="3"></div>
+            <div class="p-2 cursor-pointer hover:bg-gray-100 rounded polla-only" data-editable="number" data-index="4"></div>
+            <div class="p-2 cursor-pointer hover:bg-gray-100 rounded polla-only" data-editable="number" data-index="5"></div>
             <div class="p-2 font-bold" data-hits="0">0</div>
         `;
         
@@ -137,6 +144,84 @@ function setupEventListeners() {
     
     // Event listeners para los días de la semana
     setupDayValueCells();
+}
+
+function setupTabs() {
+    const tabs = document.querySelectorAll('.tab-btn');
+
+    const setActiveTab = (gameType) => {
+        tabs.forEach(t => {
+            if (t.dataset.game === gameType) {
+                t.classList.add('bg-white', 'text-fenix-blue');
+                t.classList.remove('text-white');
+            } else {
+                t.classList.remove('bg-white', 'text-fenix-blue');
+                t.classList.add('text-white');
+            }
+        });
+    };
+
+    // Set initial active tab
+    setActiveTab(currentGameType);
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', async () => {
+            const newGameType = tab.dataset.game;
+            if (newGameType === currentGameType) return;
+
+            currentGameType = newGameType;
+            setActiveTab(currentGameType);
+            updateUIForGameType();
+            
+            // Recargar los datos para el nuevo tipo de juego
+            await loadTicketsFromSupabase();
+            await loadWinnersFromSupabase(); // Para recalcular aciertos
+        });
+    });
+}
+
+function updateUIForGameType() {
+    const isPolla = currentGameType === 'polla';
+    const gridColsClass = isPolla ? 'grid-cols-9' : 'grid-cols-6';
+    const oldGridColsClass = isPolla ? 'grid-cols-6' : 'grid-cols-9';
+
+    // 1. Actualizar título de la tabla
+    document.getElementById('gameModeTitle').textContent = isPolla ? 'POLLA' : 'MICRO';
+
+    // 2. Mostrar/ocultar columnas en la tabla y en el modal
+    document.querySelectorAll('.polla-only').forEach(el => {
+        el.classList.toggle('hidden', !isPolla);
+    });
+
+    // 3. Actualizar layout de la tabla
+    const tableHeader = document.getElementById('playersTableHeader');
+    if (tableHeader) {
+        tableHeader.classList.remove(oldGridColsClass);
+        tableHeader.classList.add(gridColsClass);
+    }
+    const tableRows = document.querySelectorAll('#playersTableBody .grid');
+    tableRows.forEach(row => {
+        row.classList.remove(oldGridColsClass);
+        row.classList.add(gridColsClass);
+    });
+
+    // 4. Actualizar el modal de "Agregar Jugada"
+    const modalTitle = document.getElementById('addPlayerModalTitle');
+    const modalNumbersLabel = document.getElementById('addPlayerModalNumbersLabel');
+    const numberInputs = [document.getElementById('number4'), document.getElementById('number5'), document.getElementById('number6')];
+
+    modalTitle.textContent = isPolla ? 'AGREGAR NUEVA JUGADA (POLLA)' : 'AGREGAR NUEVA JUGADA (MICRO)';
+    modalNumbersLabel.textContent = isPolla ? 'NÚMEROS DEL JUGADOR (6 números):' : 'NÚMEROS DEL JUGADOR (3 números):';
+    
+    numberInputs.forEach(input => {
+        input.required = isPolla;
+    });
+
+    // 5. Mostrar/ocultar la leyenda de colores
+    const legend = document.getElementById('colorLegend');
+    if (legend) {
+        legend.classList.toggle('hidden', !isPolla);
+    }
 }
 
 // Configurar event listeners para las celdas de valores de días
@@ -332,6 +417,7 @@ function makeCellEditable(cell, row) {
                 // Validar números únicos después de establecer el valor
                 if (validateUniqueNumbers(row, cell)) {
                     updatePlayerData(row);
+                    updatePlayersTable(); // Actualizar aciertos y colores
                 }
             } else {
                 cell.textContent = currentValue;
@@ -339,6 +425,7 @@ function makeCellEditable(cell, row) {
         } else {
             cell.textContent = input.value;
             updatePlayerData(row);
+            updatePlayersTable(); // Actualizar aciertos y colores
         }
     });
 
@@ -429,20 +516,21 @@ function validateUniqueNumbers(row, currentCell) {
 // Función para actualizar datos del jugador
 function updatePlayerData(row) {
     const cells = row.children;
-    const playerId = cells[0].textContent;
+    const playerId = parseInt(row.dataset.rowId, 10); // Usar ID de fila estable
     const name = cells[1].textContent.trim();
     
     // Obtener los 6 números del jugador
+    const numCount = currentGameType === 'polla' ? 6 : 3;
     const playerNumbers = [];
-    for (let i = 2; i <= 7; i++) {
+    for (let i = 2; i <= 2 + numCount - 1; i++) {
         const number = cells[i].textContent.trim();
         if (number) {
             playerNumbers.push(number);
         }
     }
     
-    // Verificar si la fila está completa (nombre + 6 números)
-    const isComplete = name !== '' && playerNumbers.length === 6;
+    // Verificar si la fila está completa
+    const isComplete = name !== '' && playerNumbers.length === numCount;
     
     // Actualizar o crear entrada del jugador
     const existingPlayerIndex = players.findIndex(p => p.id === playerId);
@@ -462,11 +550,6 @@ function updatePlayerData(row) {
     
     // Actualizar contador de jugadas solo con filas completas
     updatePlaysCounter();
-    
-    // Actualizar tabla completa
-    updatePlayersTable();
-    
-    // Guardar datos automáticamente después de cada cambio
 }
 
 // Función para actualizar contador de jugadas
@@ -513,7 +596,7 @@ function countWinners() {
     
     rows.forEach(row => {
         const hitsCell = row.querySelector('[data-hits]');
-        if (hitsCell && hitsCell.getAttribute('data-hits') === '6') {
+        if (hitsCell && parseInt(hitsCell.getAttribute('data-hits')) === (currentGameType === 'polla' ? 6 : 3)) {
             winnersCount++;
         }
     });
@@ -555,8 +638,13 @@ function updatePlayersTable() {
     // Calcular aciertos para cada jugador
     players.forEach(player => {
         player.hits = 0;
+        // Usar solo los números ganadores relevantes para el tipo de juego
+        const relevantWinningNumbers = currentGameType === 'micro' 
+            ? new Set(Array.from(winningNumbers).slice(0, 3)) 
+            : winningNumbers;
+
         player.numbers.forEach(number => {
-            if (winningNumbers.has(number)) {
+            if (relevantWinningNumbers.has(number)) {
                 player.hits++;
             }
         });
@@ -565,17 +653,18 @@ function updatePlayersTable() {
     // Actualizar filas existentes
     rows.forEach((row, index) => {
         const cells = row.children;
-        const playerId = cells[0].textContent;
+        const playerId = parseInt(row.dataset.rowId, 10); // Usar ID de fila estable
         const player = players.find(p => p.id === playerId);
         
         if (player) {
             // Actualizar aciertos
-            const hitsCell = cells[8];
+            const hitsCell = cells[cells.length - 1];
             hitsCell.textContent = player.hits;
             hitsCell.setAttribute('data-hits', player.hits);
             
             // Marcar números ganadores y aplicar colores
-            for (let i = 2; i <= 7; i++) {
+            const numCellsEndIndex = cells.length - 2;
+            for (let i = 2; i <= numCellsEndIndex; i++) {
                 const numberCell = cells[i];
                 const number = numberCell.textContent.trim();
                 
@@ -601,12 +690,11 @@ function updatePlayersTable() {
 
 // Función para aplicar colores según aciertos
 function applyHitsColors(row, hits) {
-    // Limpiar clases y estilos de color anteriores
-    row.className = 'grid grid-cols-9 gap-2 p-2 text-center text-sm hover:bg-gray-50 border-b border-gray-100';
+    // Limpiar solo los estilos de color, no las clases de layout del grid.
     row.style.backgroundColor = '';
     
     const cells = row.children;
-    const hitsCell = cells[8];
+    const hitsCell = cells[cells.length - 1];
     // Limpiar clases de la celda de aciertos
     hitsCell.className = 'p-2 font-bold';
     hitsCell.style.backgroundColor = '';
@@ -617,12 +705,13 @@ function applyHitsColors(row, hits) {
     let rowBgColor = '';
     
     // Check for winner first (max possible hits)
-    if (winningNumbers.size > 0 && hits === winningNumbers.size) {
+    const maxPossibleHits = currentGameType === 'polla' ? 6 : 3;
+    if (winningNumbers.size > 0 && hits === maxPossibleHits && hits > 0) {
         bgColor = 'rgba(2, 255, 0)';
         textColor = 'black';
         rowBgColor = 'rgba(2, 255, 0, 0.15)';
-    } else {
-        // Handle other cases
+    } else if (currentGameType === 'polla') {
+        // Handle other cases for polla
         switch (hits) {
             case 5:
                 bgColor = 'rgb(18, 117, 251)';
@@ -649,9 +738,11 @@ function applyHitsColors(row, hits) {
             default:
                 // 0 aciertos - Sin color especial
                 hitsCell.classList.add('bg-gray-200', 'rounded');
-                cells[0].textContent = cells[0].textContent.replace('G', '');
                 return; // No más styling
         }
+    } else { // For micro, only color the main winner
+        hitsCell.classList.add('bg-gray-200', 'rounded');
+        return;
     }
 
     // Aplicar estilos
@@ -660,13 +751,6 @@ function applyHitsColors(row, hits) {
         hitsCell.style.backgroundColor = bgColor;
         hitsCell.style.color = textColor;
         hitsCell.classList.add('rounded', 'font-bold');
-    }
-    
-    // Add 'G' for winner
-    if (winningNumbers.size > 0 && hits === winningNumbers.size) {
-        cells[0].textContent = 'G' + cells[0].textContent.replace('G', '');
-    } else {
-        cells[0].textContent = cells[0].textContent.replace('G', '');
     }
 }
 
@@ -678,7 +762,7 @@ function reorderTableRows() {
     // Crear array de filas con sus datos de jugador
     const rowsWithData = rows.map(row => {
         const cells = row.children;
-        const playerId = cells[0].textContent.replace('G', '');
+        const playerId = parseInt(row.dataset.rowId, 10);
         const player = players.find(p => p.id === playerId);
         return {
             row: row,
@@ -779,23 +863,35 @@ async function loadWinnersFromSupabase() {
 
 // Cargar todos los tickets/jugadas desde Supabase y poblar la tabla
 async function loadTicketsFromSupabase() {
-    if (typeof JugadasPollaDB !== 'undefined' && JugadasPollaDB.obtenerTodas) {
-        const res = await JugadasPollaDB.obtenerTodas();
-        if (res.success && Array.isArray(res.data)) {
-            const tableBody = document.getElementById('playersTableBody');
-            const rows = tableBody.querySelectorAll('div.grid');
+    const dbManager = currentGameType === 'polla' ? JugadasPollaDB : JugadasMicroDB;
 
-            // Limpiar filas existentes antes de cargar nuevos datos
-            rows.forEach(row => {
-                const cells = row.children;
-                for (let i = 1; i < cells.length - 1; i++) {
-                    cells[i].textContent = '';
-                }
-                cells[cells.length - 1].textContent = '0';
-                cells[cells.length - 1].setAttribute('data-hits', '0');
-                row.removeAttribute('data-db-id');
-                applyHitsColors(row, 0);
-            });
+    if (dbManager && dbManager.obtenerTodas) {
+        // Limpiar estado de jugadores en memoria antes de cargar
+        players = [];
+
+        const res = await dbManager.obtenerTodas();
+        
+        const tableBody = document.getElementById('playersTableBody');
+        const rows = tableBody.querySelectorAll('div.grid');
+
+        // Limpiar filas existentes antes de cargar nuevos datos
+        rows.forEach((row, index) => {
+            const cells = row.children;
+            // Restaurar el número de fila original
+            cells[0].textContent = index + 1;
+            // Limpiar el resto de las celdas de datos
+            for (let i = 1; i < cells.length - 1; i++) {
+                cells[i].textContent = '';
+            }
+            cells[cells.length - 1].textContent = '0';
+            cells[cells.length - 1].setAttribute('data-hits', '0');
+            row.removeAttribute('data-db-id');
+            applyHitsColors(row, 0);
+        });
+
+        if (res.success && Array.isArray(res.data)) {
+            // Ordenar por ID para asegurar un orden consistente
+            res.data.sort((a, b) => a.id - b.id);
 
             res.data.forEach((ticketData, index) => {
                 if (index < rows.length) {
@@ -803,22 +899,24 @@ async function loadTicketsFromSupabase() {
                     row.dataset.dbId = ticketData.id; // Guardar el ID de la base de datos
                     const cells = row.children;
                     // Asignar datos
-                    cells[0].textContent = ticketData.id; // Usar el ID real de la BD
                     cells[1].textContent = ticketData.nombre_jugador || '';
                     cells[2].textContent = ticketData.nro_1 || '';
                     cells[3].textContent = ticketData.nro_2 || '';
                     cells[4].textContent = ticketData.nro_3 || '';
-                    cells[5].textContent = ticketData.nro_4 || '';
-                    cells[6].textContent = ticketData.nro_5 || '';
-                    cells[7].textContent = ticketData.nro_6 || '';
-                    cells[8].textContent = '0';
-                    cells[8].setAttribute('data-hits', '0');
+                    if (currentGameType === 'polla') {
+                        cells[5].textContent = ticketData.nro_4 || '';
+                        cells[6].textContent = ticketData.nro_5 || '';
+                        cells[7].textContent = ticketData.nro_6 || '';
+                    }
                     if (ticketData.nombre_jugador) {
                         updatePlayerData(row);
                     }
                 }
             });
         }
+        // Actualizar contadores y aciertos después de cargar todos los datos
+        updatePlaysCounter();
+        updatePlayersTable();
     }
 }
 
@@ -832,22 +930,23 @@ async function saveTableDataToSupabase() {
     const playsToInsert = [];
     const playsToUpdate = [];
 
+    const numCount = currentGameType === 'polla' ? 6 : 3;
+
     rows.forEach(row => {
         const cells = row.children;
         const name = cells[1].textContent.trim();
         const numbers = [];
-        for (let i = 2; i <= 7; i++) {
+        for (let i = 2; i <= 2 + numCount - 1; i++) {
             const num = cells[i].textContent.trim();
             if (num) numbers.push(num);
         }
 
-        // Solo procesar filas completas (nombre y 6 números)
-        if (name && numbers.length === 6) {
+        // Solo procesar filas completas
+        if (name && numbers.length === numCount) {
             const playData = {
                 nombre_jugador: name,
-                nro_1: numbers[0], nro_2: numbers[1], nro_3: numbers[2],
-                nro_4: numbers[3], nro_5: numbers[4], nro_6: numbers[5],
             };
+            numbers.forEach((num, i) => playData[`nro_${i+1}`] = num);
 
             const dbId = row.dataset.dbId;
             if (dbId) {
@@ -862,13 +961,14 @@ async function saveTableDataToSupabase() {
     try {
         let success = true;
         const errors = [];
+        const dbManager = currentGameType === 'polla' ? JugadasPollaDB : JugadasMicroDB;
 
         if (playsToInsert.length > 0) {
-            const res = await JugadasPollaDB.crear(playsToInsert);
+            const res = await dbManager.crear(playsToInsert);
             if (!res.success) { success = false; errors.push(res.error); }
         }
         if (playsToUpdate.length > 0) {
-            const res = await JugadasPollaDB.actualizar(playsToUpdate);
+            const res = await dbManager.actualizar(playsToUpdate);
             if (!res.success) { success = false; errors.push(res.error); }
         }
 
@@ -1109,8 +1209,14 @@ function handlePlayerNameBlur(e) {
 
 // Agregar jugador desde el formulario
 async function addPlayerFromForm() {
+    const isPolla = currentGameType === 'polla';
+    const numCount = isPolla ? 6 : 3;
+
     const name = document.getElementById('playerName').value.trim();
-    const numbers = Array.from({ length: 6 }, (_, i) => document.getElementById(`number${i + 1}`).value.trim());
+    const numbers = [];
+    for (let i = 1; i <= numCount; i++) {
+        numbers.push(document.getElementById(`number${i}`).value.trim());
+    }
     const gratis = document.getElementById('gratis').value;
     
     // Validar que todos los campos estén llenos
@@ -1118,24 +1224,24 @@ async function addPlayerFromForm() {
     
     // Validar números
     const validNumbers = ['0', '00', ...Array.from({ length: 36 }, (_, i) => (i + 1).toString())];
-    for (let i = 0; i < numbers.length; i++) {
+    for (let i = 0; i < numCount; i++) {
         if (!numbers[i]) return alert(`Por favor ingresa el número ${i + 1}`);
         if (!validNumbers.includes(numbers[i])) return alert(`El número ${numbers[i]} no es válido.`);
     }
     
     // Validar números únicos
-    if (new Set(numbers).size !== numbers.length) return alert('No puedes repetir números.');
+    if (new Set(numbers).size !== numCount) return alert('No puedes repetir números.');
     
     // Guardar jugada en Supabase
-    if (typeof JugadasPollaDB !== 'undefined' && JugadasPollaDB.crear) {
+    const dbManager = isPolla ? JugadasPollaDB : JugadasMicroDB;
+    if (dbManager && dbManager.crear) {
         const jugadaData = {
             nombre_jugador: name,
-            nro_1: numbers[0], nro_2: numbers[1], nro_3: numbers[2],
-            nro_4: numbers[3], nro_5: numbers[4], nro_6: numbers[5],
             gratis: gratis === 'SÍ'
         };
+        numbers.forEach((num, i) => jugadaData[`nro_${i+1}`] = num);
 
-        const resJugada = await JugadasPollaDB.crear([jugadaData]);
+        const resJugada = await dbManager.crear([jugadaData]);
 
         if (resJugada.success) {
             if (typeof JugadoresDB !== 'undefined' && !allPlayersSupabase.includes(name)) {
