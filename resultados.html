@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados - Polla El Fenix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'fenix-red': '#dc2626',
+                        'fenix-orange': '#ea580c',
+                        'fenix-yellow': '#fbbf24',
+                        'fenix-green': '#16a34a',
+                        'fenix-blue': '#2563eb',
+                        'fenix-purple': '#9333ea',
+                        'fenix-pink': '#db2777',
+                        'fenix-gray': '#6b7280',
+                        'background-1': '#0089ff',
+                        'background-2': '#2677dc'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-background-1 to-background-2 max-w-[80vw] mx-auto min-h-screen mb-5">
+    <div class="container mx-auto p-4 ">
+        <div class="text-center mb-8">
+            <h1 class="results-title text-3xl sm:text-4xl font-bold text-white mb-2 drop-shadow-lg">RESULTADOS POLLA EL FÉNIX</h1>
+            <p class="results-subtitle text-white/90">Clasificación ordenada por número de aciertos</p>
+        </div>
+
+        <div class="flex justify-center mb-8 bg-white/20 rounded-full p-1 max-w-sm mx-auto">
+            <button class="tab-btn flex-1 py-2 px-4 rounded-full font-bold text-white transition-all" data-game="polla">Polla (6 Números)</button>
+            <button class="tab-btn flex-1 py-2 px-4 rounded-full font-bold text-white transition-all" data-game="micro">Micro (3 Números)</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 justify-center items-center">
+            <!-- Columna Izquierda: Números Ganadores y Estadísticas -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-800 text-center mb-4">NÚMEROS GANADORES</h2>
+                    <div class="grid grid-cols-6 sm:grid-cols-8 gap-2 justify-center" id="winningNumbersGrid">
+                        <!-- Los números ganadores se cargarán aquí -->
+                    </div>
+                </div>
+
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <article class="grid grid-cols-2 gap-4">
+                        <div class="text-center bg-gray-100 p-3 rounded-lg">
+                            <div class="text-2xl sm:text-3xl font-bold text-fenix-blue" id="totalPlayersResult">0</div>
+                            <div class="text-sm font-semibold text-gray-600">Total Jugadores</div>
+                        </div>
+                        <div class="text-center bg-gray-100 p-3 rounded-lg">
+                            <div class="text-2xl sm:text-3xl font-bold text-fenix-green" id="totalWinnersResult">0</div>
+                            <div class="text-sm font-semibold text-gray-600" id="winnerLabel">Ganadores</div>
+                        </div>
+                        <div class="text-center bg-gray-100 p-3 rounded-lg">
+                            <div class="text-2xl sm:text-3xl font-bold text-fenix-orange" id="totalPrizeResult">0</div>
+                            <div class="text-sm font-semibold text-gray-600">Premio Total</div>
+                        </div>
+                        <div class="text-center bg-gray-100 p-3 rounded-lg">
+                            <div class="text-2xl sm:text-3xl font-bold text-fenix-purple" id="prizePerWinnerResult">0</div>
+                            <div class="text-sm font-semibold text-gray-600">Premio por Ganador</div>
+                        </div>
+            </div>
+            <img src="Polla_Fenix-removebg-preview.png" alt="Logo Polla El Fénix" class="w-full mx-auto mb-2">
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Tabla de Resultados -->
+            <div class="lg:col-span-2 relative">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <!-- Loading Spinner Overlay -->
+                    <div id="loadingOverlay" class="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-20 hidden">
+                        <div class="flex items-center space-x-2">
+                            <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-lg font-semibold text-gray-700">Cargando datos...</span>
+                        </div>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <div class="p-4 border-b">
+                        <input type="text" id="searchInput" placeholder="Buscar por nombre de jugador..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-max text-sm text-left text-gray-500">
+                            <thead class="text-xs text-white uppercase bg-green-600">
+                                <tr>
+                                    <th scope="col" class="px-2 sm:px-6 py-3 text-center">#</th>
+                                    <th scope="col" class="px-2 sm:px-6 py-3">NOMBRE</th>
+                                    <th scope="col" class="px-2 sm:px-6 py-3 text-center">NÚMEROS</th>
+                                    <th scope="col" class="px-2 sm:px-6 py-3 text-center">ACIERTOS</th>
+                                    <th scope="col" class="px-2 sm:px-6 py-3 text-center">PREMIO</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <!-- Los resultados se cargarán aquí -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Librería de Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Configuración de la aplicación -->
+    <script src="config.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="resultados.js"></script>
+</body>
+</html>
