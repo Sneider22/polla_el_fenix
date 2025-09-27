@@ -130,21 +130,22 @@ async function loadDataFromSupabase() {
             const maxHits = resultsData.length > 0 ? Math.max(...resultsData.map(p => p.hits)) : 0;
 
             // Calcular premios
+            const prizeAmount = 30; // Asumiendo 30 BS por jugada para ambos
             const payingPlayers = resultsData.filter(player => !player.gratis);
             const winnersWithMaxHits = payingPlayers.filter(player => player.hits === maxHits);
-            const totalPrize = payingPlayers.length * 30; // Asumiendo 30 BS por jugada para ambos
-            const prizePool = totalPrize * 0.8;
-            
+            const premioTotal = payingPlayers.length * prizeAmount;
+            const recaudadoParaPremio = premioTotal * 0.8;
+
             let prizeForMaxHits = 0;
             if (currentGameType === 'polla') {
                 // Para polla, el premio principal se reparte si hay ganadores con 6 aciertos
                 prizeForMaxHits = (maxHits === 6 && winnersWithMaxHits.length > 0)
-                    ? Math.floor(prizePool / winnersWithMaxHits.length)
+                    ? Math.floor(recaudadoParaPremio / winnersWithMaxHits.length)
                     : 0;
             } else { // micro
                 // Para micro, el premio principal solo se reparte si hay ganadores con el máximo de 3 aciertos
                 prizeForMaxHits = (maxHits === 3 && winnersWithMaxHits.length > 0)
-                    ? Math.floor(prizePool / winnersWithMaxHits.length)
+                    ? Math.floor(recaudadoParaPremio / winnersWithMaxHits.length)
                     : 0;
             }
 
@@ -163,7 +164,6 @@ async function loadDataFromSupabase() {
         }
         // Si ticketsResult.success es falso, resultsData ya está como []
     } catch (error) {
-        console.error('Error al cargar datos de resultados desde Supabase:', error);
         resultsData = [];
         winningNumbers = [];
     }
@@ -173,12 +173,14 @@ async function loadDataFromSupabase() {
 function calculatePrize(hits, isGratis, maxHits, prizeForMaxHits, gameType) {
     if (isGratis) return 0;
 
-    // Si el jugador es uno de los ganadores principales
-    if (hits === maxHits && prizeForMaxHits > 0) {
+    // Solo se considera ganador si tiene todos los aciertos posibles
+    const isCompleteWinner = (gameType === 'polla' && hits === 6) || 
+                           (gameType === 'micro' && hits === 3);
+
+    if (isCompleteWinner && prizeForMaxHits > 0) {
         return prizeForMaxHits;
     }
     
-    // No hay premios fijos para 'micro' en esta implementación, o para otros casos de 'polla'
     return 0;
 }
 
