@@ -8,6 +8,8 @@ let winningNumbers = new Set(); // Números ganadores seleccionados para el jueg
 let pollaPlayers = []; // Array para jugadores de Polla
 let microPlayers = []; // Array para jugadores de Micro
 let playersDatabase = []; // Base de datos local de nombres de jugadores
+// Celda donde se hizo click por última vez (punto de inicio para pegado desde Excel)
+let lastClickedCell = null;
 let dailyValues = {
     polla: { lunes: 0, martes: 0, miércoles: 0, jueves: 0, viernes: 0, sábado: 0, domingo: 0, garantizado: 0, acumulado: 0 },
     micro: { lunes: 0, martes: 0, miércoles: 0, jueves: 0, viernes: 0, sábado: 0, domingo: 0, garantizado: 0, acumulado: 0 }
@@ -108,6 +110,18 @@ async function initializeGame() {
 
     // Cargar jugadores para autocompletado
     loadAllPlayersForAutocomplete();
+
+    // Registrar listener para pegado desde Excel/Sheets
+    document.addEventListener('paste', function(e) {
+        // Solo manejar pegados cuando el foco esté dentro de las tablas o no en un campo de texto
+        handleTablePaste(e);
+    });
+
+    // También añadir listeners específicos a los cuerpos de las tablas para asegurar comportamiento consistente
+    const pollaBody = document.getElementById('pollaTableBody');
+    const microBody = document.getElementById('microTableBody');
+    if (pollaBody) pollaBody.addEventListener('paste', handleTablePaste);
+    if (microBody) microBody.addEventListener('paste', handleTablePaste);
     
     // Marcar día actual
     highlightCurrentDay();
@@ -187,14 +201,91 @@ function setupRowEvents(row) {
     editableCells.forEach(cell => {
         if (cell.dataset.editable === 'gratis') {
             cell.addEventListener('click', function() {
+                // Registrar la última celda clickeada
+                lastClickedCell = this;
                 toggleGratis(this, row);
             });
         } else {
             cell.addEventListener('click', function() {
+                // Registrar la última celda clickeada
+                lastClickedCell = this;
                 makeCellEditable(this, row);
             });
         }
     });
+}
+
+// Manejar pegado desde Excel/Sheets para poblar múltiples filas a la vez
+function handleTablePaste(e) {
+    // Solo procesar si hay texto en el clipboard
+    const clipboardData = (e.clipboardData || window.clipboardData);
+    if (!clipboardData) return;
+
+    const text = clipboardData.getData('Text') || clipboardData.getData('text/plain');
+    if (!text) return;
+
+    // Evitar que el navegador pegue el texto crudo en el input actual
+    e.preventDefault();
+
+    // Determinar la fila y celda de inicio
+    let startCell = lastClickedCell;
+    if (!startCell) {
+        // Si no se ha hecho click, tomar la primera fila de la tabla visible
+        startCell = document.querySelector('#' + (currentGameType === 'polla' ? 'pollaTableBody' : 'microTableBody') + ' tr td[data-editable]');
+    }
+    if (!startCell) return;
+
+    const startRow = startCell.closest('tr');
+    if (!startRow) return;
+
+    // Parsear el texto: soportar tab, comma, semicolon y saltos de línea
+    const lines = text.trim().split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length === 0) return;
+
+    let pastedCount = 0;
+    for (let i = 0; i < lines.length; i++) {
+        const cols = lines[i].split(/\t|,|;/).map(c => c.trim());
+        const targetRowIndex = parseInt(startRow.dataset.rowId || startRow.rowIndex) + i;
+
+        // Encontrar la fila objetivo por data-row-id
+        const tbodyId = currentGameType === 'polla' ? 'pollaTableBody' : 'microTableBody';
+        const targetRow = document.querySelector(`#${tbodyId} tr[data-row-id="${targetRowIndex}"]`);
+        if (!targetRow) continue;
+
+        // Nombre y números: asumir first col = nombre, siguientes = números (3 o 6)
+        const nameCell = targetRow.querySelector('td[data-editable="name"]');
+        if (cols.length >= 1 && nameCell) {
+            nameCell.textContent = cols[0];
+        }
+
+        // Números
+        const numberCells = [...targetRow.querySelectorAll('td[data-editable="number"]')];
+        for (let j = 0; j < numberCells.length; j++) {
+            const val = cols[1 + j] || '';
+            numberCells[j].textContent = val;
+        }
+
+        // Gratis si se proporciona (col siguiente a los números)
+        const gratisCell = targetRow.querySelector('td[data-editable="gratis"]');
+        const gratisColIndex = 1 + numberCells.length;
+        if (gratisCell && cols[gratisColIndex] !== undefined) {
+            const txt = cols[gratisColIndex].toString().toLowerCase();
+            gratisCell.textContent = (txt === 's' || txt === 'si' || txt === 'sí' || txt === 'yes' || txt === 'y') ? 'SÍ' : 'NO';
+        }
+
+        // Actualizar datos y guardar si la fila tiene al menos un número
+        updatePlayerData(targetRow);
+        updatePlayersTable();
+
+        // Guardar asincrónicamente la fila si tiene nombre o números
+        const hasAny = (nameCell && nameCell.textContent.trim().length > 0) || numberCells.some(c => c.textContent.trim().length > 0);
+        if (hasAny) {
+            saveRowData(targetRow);
+            pastedCount++;
+        }
+    }
+
+    showToast(`Pegadas ${pastedCount} fila(s) desde el portapapeles`, 'success');
 }
 
 // Función para cambiar el estado de 'Gratis'
