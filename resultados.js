@@ -288,49 +288,44 @@ function displayResultsTable(dataToDisplay) {
             row.classList.add(bgColorClass);
         }
 
-        // 1. Posición
+        // 1. Posición (compacta)
         const positionCell = document.createElement('td');
-        positionCell.className = 'px-6 py-4 font-bold text-center text-gray-900';
-        positionCell.textContent = player.id;
-        positionCell.className = 'px-2 sm:px-6 py-4 font-bold text-center text-gray-900';
+        positionCell.className = 'px-2 py-2 font-bold text-center text-gray-900';
         positionCell.textContent = player.position;
         if (player.hits === maxPossibleHits && player.hits > 0) {
-            positionCell.innerHTML = `🏆 ${player.id}`;
             positionCell.innerHTML = `🏆 ${player.position}`;
         }
 
         // 2. Nombre
-        const nameCell = document.createElement('td');
-        nameCell.className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap';
-        nameCell.className = 'px-2 sm:px-6 py-4 font-medium text-gray-900 whitespace-nowrap';
-        nameCell.textContent = player.name;
+    const nameCell = document.createElement('td');
+    nameCell.className = 'px-2 py-2 font-medium text-gray-900 truncate max-w-[220px]';
+    nameCell.textContent = player.name;
 
         // 3. Números Jugados
         const numbersCell = document.createElement('td');
-        numbersCell.className = 'px-6 py-4 text-center';
-        // Representar números como cajas cuadradas de tamaño fijo
+        numbersCell.className = 'px-2 py-2 text-center';
+        // Representar números como cajas pequeñas y compactas
         numbersCell.innerHTML = `<div class="flex items-center justify-center gap-1 flex-nowrap">${
             player.numbers.map(number => {
                 const isHit = winningNumbers.includes(number);
-                const numberClass = isHit 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-gray-200 text-gray-800';
-                return `<span class="inline-flex items-center justify-center font-bold text-sm ${numberClass} text-center rounded-md w-7 h-7 sm:w-9 sm:h-9">${number}</span>`;
+                if (isHit) {
+                    // Verde militar uniforme para todos los números acertados
+                    return `<span class="inline-flex items-center justify-center font-bold text-xs text-center rounded-md w-6 h-6 sm:w-7 sm:h-7" style="background-color: #06402b; color: #ffffff;">${number}</span>`;
+                }
+                const numberClass = 'bg-gray-200 text-gray-800';
+                return `<span class="inline-flex items-center justify-center font-bold text-xs ${numberClass} text-center rounded-md w-6 h-6 sm:w-7 sm:h-7">${number}</span>`;
             }).join('')
         }</div>`;
-        numbersCell.className = 'px-2 sm:px-6 py-4';
 
         // 4. Aciertos
         const hitsCell = document.createElement('td');
-        hitsCell.className = 'px-6 py-4 text-center';
-        hitsCell.className = 'px-2 sm:px-6 py-4 text-center';
-    // Aciertos como cuadro fijo
-    hitsCell.innerHTML = `<span class="inline-flex items-center justify-center bg-blue-600 text-white text-sm font-bold text-center rounded-md w-7 h-7 sm:w-8 sm:h-8">${player.hits}</span>`;
+        hitsCell.className = 'px-2 py-2 text-center';
+        // Aciertos como cuadro compacto
+        hitsCell.innerHTML = `<span class="inline-flex items-center justify-center bg-blue-600 text-white text-sm font-bold text-center rounded-md w-6 h-6 sm:w-7 sm:h-7">${player.hits}</span>`;
 
         // 5. Premio
-        const prizeCell = document.createElement('td');
-        prizeCell.className = 'px-6 py-4 text-center font-bold';
-        prizeCell.className = 'px-2 sm:px-6 py-4 text-center font-bold';
+    const prizeCell = document.createElement('td');
+    prizeCell.className = 'px-2 py-2 text-center font-bold';
         if (player.prize > 0) {
             prizeCell.textContent = `${player.prize} BS`;
             prizeCell.className += ' text-black';

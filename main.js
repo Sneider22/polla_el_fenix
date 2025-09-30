@@ -676,51 +676,10 @@ async function saveRowData(row) {
 }
 
 async function resetAll() {
-    const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
-    if (!confirm(`¿Estás seguro de que quieres resetear los datos de la ${gameName}? Esto borrará TODAS las jugadas, los números ganadores y el pote guardado para este modo de juego.`)) {
-        return;
-    }
-
-    const jugadasDB = currentGameType === 'polla' ? JugadasPollaDB : JugadasMicroDB;
-    const resultadosDB = currentGameType === 'polla' ? ResultadosNumerosDB : ResultadosMicroDB;
-
-    try {
-        console.log(`Reseteando datos para ${gameName}...`);
-        
-        // 1. Borrar datos de la base de datos
-        const jugadasRes = await jugadasDB.deleteAll();
-        if (!jugadasRes.success) {
-            throw new Error(jugadasRes.error || `Error borrando jugadas de ${gameName}`);
-        }
-
-        const resultadosRes = await resultadosDB.deleteAll();
-        if (!resultadosRes.success) {
-            throw new Error(resultadosRes.error || `Error borrando resultados de ${gameName}`);
-        }
-
-        // 2. Resetear el pote para el modo actual
-        if (dailyValues[currentGameType]) {
-            Object.keys(dailyValues[currentGameType]).forEach(day => {
-                dailyValues[currentGameType][day] = 0;
-            });
-        }
-        // Guardar el pote reseteado en la BD
-        if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
-            await PotesDB.actualizar(currentGameType, dailyValues[currentGameType]);
-        }
-        // Actualizar la UI para reflejar el pote reseteado
-        switchGameModeValues(currentGameType);
-
-        // 3. Limpiar la UI de jugadas
-        await loadWinnersFromSupabase();
-        await loadTicketsFromSupabase();
-
-        showToast(`¡Los datos de la ${gameName} han sido reseteados exitosamente!`);
-
-    } catch (error) {
-        console.error('Error al resetear los datos del juego:', error);
-        alert('Error al resetear los datos del juego: ' + error.message);
-    }
+    // Legacy full-reset function removed on purpose.
+    // The app now uses a modal-driven reset that only deletes jugadas (tickets) to avoid accidental
+    // deletion of winners or pot values. The modal-driven `resetAll()` (defined earlier) handles
+    // confirmation and deletion of jugadas only.
 }
 
 // Función para seleccionar/deseleccionar un número ganador
