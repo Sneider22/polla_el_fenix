@@ -540,51 +540,50 @@ function clearCurrentPot() {
 
 // Función para resetear toda la app
 async function resetAll() {
-    const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
-    if (!confirm(`¿Estás seguro de que quieres resetear los datos de la ${gameName}? Esto borrará TODAS las jugadas, los números ganadores y el pote guardado para este modo de juego.`)) {
+    // Mostrar modal de confirmación (index)
+    const modal = document.getElementById('confirmResetModalIndex');
+    const cancelBtn = document.getElementById('cancelResetIndexBtn');
+    const confirmBtn = document.getElementById('confirmResetIndexBtn');
+    if (!modal || !cancelBtn || !confirmBtn) {
+        console.error('Modal de confirmación (index) no encontrado en el DOM.');
         return;
     }
 
-    const jugadasDB = currentGameType === 'polla' ? JugadasPollaDB : JugadasMicroDB;
-    const resultadosDB = currentGameType === 'polla' ? ResultadosNumerosDB : ResultadosMicroDB;
+    modal.classList.remove('hidden');
 
-    try {
-        console.log(`Reseteando datos para ${gameName}...`);
-        
-        // 1. Borrar datos de la base de datos
-        const jugadasRes = await jugadasDB.deleteAll();
-        if (!jugadasRes.success) {
-            throw new Error(jugadasRes.error || `Error borrando jugadas de ${gameName}`);
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        cancelBtn.removeEventListener('click', onCancel);
+        confirmBtn.removeEventListener('click', onConfirm);
+    };
+
+    const onCancel = () => {
+        closeModal();
+    };
+
+    const onConfirm = async () => {
+        closeModal();
+        const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
+        const jugadasDB = currentGameType === 'polla' ? JugadasPollaDB : JugadasMicroDB;
+        try {
+            // Borrar SOLO las jugadas
+            const jugadasRes = await jugadasDB.deleteAll();
+            if (!jugadasRes.success) {
+                throw new Error(jugadasRes.error || `Error borrando jugadas de ${gameName}`);
+            }
+
+            // No se tocan números ganadores ni pote
+            // Refrescar UI
+            await loadTicketsFromSupabase();
+            showToast(`Todas las jugadas de la ${gameName} han sido borradas.`, 'success');
+        } catch (error) {
+            console.error('Error al borrar jugadas:', error);
+            showToast('Error al borrar las jugadas: ' + (error.message || error), 'error');
         }
+    };
 
-        const resultadosRes = await resultadosDB.deleteAll();
-        if (!resultadosRes.success) {
-            throw new Error(resultadosRes.error || `Error borrando resultados de ${gameName}`);
-        }
-
-        // 2. Resetear el pote para el modo actual
-        if (dailyValues[currentGameType]) {
-            Object.keys(dailyValues[currentGameType]).forEach(day => {
-                dailyValues[currentGameType][day] = 0;
-            });
-        }
-        // Guardar el pote reseteado en la BD
-        if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
-            await PotesDB.actualizar(currentGameType, dailyValues[currentGameType]);
-        }
-        // Actualizar la UI para reflejar el pote reseteado
-        switchGameModeValues(currentGameType);
-
-        // 3. Limpiar la UI de jugadas
-        await loadWinnersFromSupabase();
-        await loadTicketsFromSupabase();
-
-        showToast(`¡Los datos de la ${gameName} han sido reseteados exitosamente!`);
-
-    } catch (error) {
-        console.error('Error al resetear los datos del juego:', error);
-        showToast('Error al resetear los datos del juego: ' + error.message, 'error');
-    }
+    cancelBtn.addEventListener('click', onCancel);
+    confirmBtn.addEventListener('click', onConfirm);
 }
 
 // Elimina una jugada de la UI y la base de datos
@@ -631,7 +630,7 @@ async function deletePlay(rowId) {
         
         row.innerHTML = newRowContent;
         row.removeAttribute('data-db-id');
-        applyHitsColors(row, 0);
+    applyHitsColors(row, 0, currentGameType);
         setupRowEvents(row); // Volver a adjuntar eventos a las nuevas celdas
     }
 
@@ -1366,21 +1365,25 @@ function updateMicroTable() {
 }
 
 // Función para aplicar colores según aciertos
-function applyHitsColors(row, hits) {
+// Ahora acepta opcionalmente `gameType` ('polla'|'micro'). Si no se pasa, usa `currentGameType`.
+function applyHitsColors(row, hits, gameType) {
     // Limpiar estilos previos
     row.style.backgroundColor = '';
     const hitsCell = row.querySelector('[data-hits]');
     if (hitsCell) {
         hitsCell.style.backgroundColor = '';
         hitsCell.style.color = ''; // Reset color
-        // No resetear la clase completa para no perder p-2 y font-bold
+        // Remover clases de estado previas para evitar acumulación
+        hitsCell.classList.remove('bg-gray-200');
+        hitsCell.classList.remove('rounded', 'font-bold');
     }
 
     let bgColor = '';
     let textColor = 'white';
     let rowBgColor = '';
-
-    const maxPossibleHits = currentGameType === 'polla' ? 6 : 3;
+    // Determinar tipo de juego
+    gameType = gameType || currentGameType;
+    const maxPossibleHits = gameType === 'polla' ? 6 : 3;
 
     // Estilo para el ganador principal (3 aciertos en micro, 6 en polla)
     if (winningNumbers.size > 0 && hits === maxPossibleHits && hits > 0) {
@@ -1389,7 +1392,7 @@ function applyHitsColors(row, hits) {
         rowBgColor = 'rgba(2, 255, 0, 0.15)';
     } 
     // Estilos intermedios solo para POLLA
-    else if (currentGameType === 'polla') {
+    else if (gameType === 'polla') {
         switch (hits) {
             case 5:
                 bgColor = 'rgb(18, 117, 251)';
@@ -1413,6 +1416,24 @@ function applyHitsColors(row, hits) {
                 textColor = 'black';
                 rowBgColor = 'rgba(145, 224, 240, 0.2)';
                 break;
+        }
+    }
+    // Estilos para MICRO (2 y 1 aciertos) — acentuar ligeramente el fondo
+    else if (gameType === 'micro') {
+        switch (hits) {
+            case 2:
+                // Navy ligeramente más intenso para mejor contraste (leve aumento)
+                bgColor = 'rgb(3, 179, 216)';
+                rowBgColor = 'rgba(3, 179, 216, 0.15)';
+                break;
+            case 1:
+                // Azul claro un poco más saturado
+                bgColor = 'rgb(145, 224, 240)';
+                textColor = 'black';
+                rowBgColor = 'rgba(145, 224, 240, 0.2)';
+                break;
+            default:
+                break; // 0 aciertos: sin color
         }
     }
 
@@ -1575,7 +1596,7 @@ async function loadTicketsFromSupabase() {
 
             cells[hitsCellIndex].setAttribute('data-hits', '0');
             row.removeAttribute('data-db-id');
-            applyHitsColors(row, 0);
+            applyHitsColors(row, 0, currentGameType);
         });
 
         if (res.success && Array.isArray(res.data)) {

@@ -33,14 +33,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 function setupTabs() {
     const tabs = document.querySelectorAll('.tab-btn');
 
-    const setActiveTab = (gameType) => {
+const setActiveTab = (gameType) => {
         tabs.forEach(t => {
             if (t.dataset.game === gameType) {
-                t.classList.add('bg-white', 'text-fenix-blue');
+                t.classList.add('bg-white', 'text-fenix-red');
                 t.classList.remove('text-white');
             } else {
-                t.classList.remove('bg-white', 'text-fenix-blue');
-                t.classList.add('text-white');
+                t.classList.remove('bg-white', 'text-fenix-red');
+                t.classList.add('text-[#a61c00]');
             }
         });
     };
@@ -194,7 +194,9 @@ function displayWinningNumbers() {
 
     winningNumbers.forEach(number => {
         const numberElement = document.createElement('div');
-        numberElement.className = 'w-10 h-10 flex items-center justify-center rounded-full font-bold bg-yellow-400 text-black text-base shadow-md';
+        // Usar caja cuadrada fija para consistencia (misma anchura/altura para 1 o 2 dígitos)
+        numberElement.className = 'w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold bg-yellow-400 text-black text-base shadow-md';
+        numberElement.style.minWidth = '0';
         numberElement.textContent = number;
         container.appendChild(numberElement);
     });
@@ -272,6 +274,13 @@ function displayResultsTable(dataToDisplay) {
                 case 2: bgColorClass = 'bg-[#4acae5]'; break;
                 case 1: bgColorClass = 'bg-[#91e0f0]'; break;
             }
+        } else if (currentGameType === 'micro') {
+            // Para micro: asignar colores a 2 y 1 aciertos
+            switch (player.hits) {
+                case 2: bgColorClass = 'bg-[#03b3d8]'; break; // navy
+                case 1: bgColorClass = 'bg-[#91e0f0]'; break; // light blue (azul muy claro)
+                default: break; // 0 aciertos: sin color
+            }
         }
         // Para micro, no se aplican colores intermedios, solo el de ganador principal.
 
@@ -299,30 +308,24 @@ function displayResultsTable(dataToDisplay) {
         // 3. Números Jugados
         const numbersCell = document.createElement('td');
         numbersCell.className = 'px-6 py-4 text-center';
-        numbersCell.innerHTML = player.numbers.map(number => {
-            const isHit = winningNumbers.includes(number);
-            const numberClass = isHit 
-                ? 'bg-green-500 text-white' 
-                : 'bg-gray-200 text-gray-800';
-            return `<span class="inline-block font-bold text-xs px-2 py-1 rounded-full ${numberClass}">${number}</span>`;
-        }).join(' ');
-        numbersCell.className = 'px-2 sm:px-6 py-4';
-        // Usar un contenedor flex para que no se rompa en mobile y fuerce el scroll horizontal de la tabla
+        // Representar números como cajas cuadradas de tamaño fijo
         numbersCell.innerHTML = `<div class="flex items-center justify-center gap-1 flex-nowrap">${
             player.numbers.map(number => {
                 const isHit = winningNumbers.includes(number);
                 const numberClass = isHit 
                     ? 'bg-green-500 text-white' 
                     : 'bg-gray-200 text-gray-800';
-                return `<span class="inline-block font-bold text-xs px-2 py-1 rounded-full ${numberClass} whitespace-nowrap">${number}</span>`;
+                return `<span class="inline-flex items-center justify-center font-bold text-sm ${numberClass} text-center rounded-md w-7 h-7 sm:w-9 sm:h-9">${number}</span>`;
             }).join('')
         }</div>`;
+        numbersCell.className = 'px-2 sm:px-6 py-4';
 
         // 4. Aciertos
         const hitsCell = document.createElement('td');
         hitsCell.className = 'px-6 py-4 text-center';
         hitsCell.className = 'px-2 sm:px-6 py-4 text-center';
-        hitsCell.innerHTML = `<span class="bg-blue-600 text-white text-sm font-bold px-3 py-1 rounded-full">${player.hits}</span>`;
+    // Aciertos como cuadro fijo
+    hitsCell.innerHTML = `<span class="inline-flex items-center justify-center bg-blue-600 text-white text-sm font-bold text-center rounded-md w-7 h-7 sm:w-8 sm:h-8">${player.hits}</span>`;
 
         // 5. Premio
         const prizeCell = document.createElement('td');
@@ -421,33 +424,55 @@ async function updateResults() {
 }
 
 async function resetCurrentGame() {
-    const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
-    const confirmation = confirm(`¿Estás seguro de que quieres borrar TODAS las jugadas de la ${gameName}? Esta acción no se puede deshacer.`);
+    // Mostrar modal de confirmación en lugar de confirm()
+    const modal = document.getElementById('confirmResetModal');
+    const cancelBtn = document.getElementById('cancelResetBtn');
+    const confirmBtn = document.getElementById('confirmResetBtn');
+    if (!modal || !cancelBtn || !confirmBtn) {
+        console.error('Modal de confirmación no encontrado en el DOM. Asegúrate de que resultados.html contiene el modal.');
+        return;
+    }
 
-    if (confirmation) {
+    // Mostrar modal
+    modal.classList.remove('hidden');
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        cancelBtn.removeEventListener('click', onCancel);
+        confirmBtn.removeEventListener('click', onConfirm);
+    };
+
+    const onCancel = () => {
+        closeModal();
+    };
+
+    const onConfirm = async () => {
+        closeModal();
+        const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
         try {
             let deleteResult;
             if (currentGameType === 'polla') {
-                // Asumo que existe una función `borrarTodas` en el objeto `JugadasPollaDB`
                 deleteResult = await JugadasPollaDB.borrarTodas();
             } else {
-                // Asumo que existe una función `borrarTodas` en el objeto `JugadasMicroDB`
                 deleteResult = await JugadasMicroDB.borrarTodas();
             }
 
-            if (deleteResult.success) {
-                alert(`Todas las jugadas de la ${gameName} han sido borradas.`);
-                await loadAndDisplayData(); // Recargar la vista para reflejar los cambios
+            if (deleteResult && deleteResult.success) {
+                // No borrar números ganadores ni pote — sólo recargar las vistas
+                showToast(`Todas las jugadas de la ${gameName} han sido borradas.`, 'success');
+                await loadAndDisplayData();
             } else {
-                // Usar un mensaje de error más detallado si está disponible
-                const errorMessage = deleteResult.error ? deleteResult.error.message : 'Ocurrió un error desconocido.';
-                alert(`Error al borrar las jugadas: ${errorMessage}`);
+                const errorMessage = deleteResult && deleteResult.error ? deleteResult.error.message : 'Ocurrió un error desconocido.';
+                showToast(`Error al borrar las jugadas: ${errorMessage}`, 'error');
             }
         } catch (error) {
             console.error(`Error al intentar resetear las jugadas de ${gameName}:`, error);
-            alert('Se produjo un error inesperado. Revisa la consola para más detalles.');
+            showToast('Se produjo un error inesperado. Revisa la consola para más detalles.', 'error');
         }
-    }
+    };
+
+    cancelBtn.addEventListener('click', onCancel);
+    confirmBtn.addEventListener('click', onConfirm);
 }
 
 // Exportar funciones para uso global
