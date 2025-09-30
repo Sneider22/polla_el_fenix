@@ -126,31 +126,27 @@ async function loadDataFromSupabase() {
                     };
                 });
 
-            // Encontrar el número máximo de aciertos
-            const maxHits = resultsData.length > 0 ? Math.max(...resultsData.map(p => p.hits)) : 0;
+            // Determinar ganadores usando umbrales fijos: 6 para polla, 3 para micro
+            const thresholdHits = currentGameType === 'polla' ? 6 : 3;
 
             // Calcular premios
             const payingPlayers = resultsData.filter(player => !player.gratis);
-            const winnersWithMaxHits = payingPlayers.filter(player => player.hits === maxHits);
+            // Solo los jugadores que alcanzan el umbral fijo son considerados ganadores principales
+            const winnersAtThreshold = payingPlayers.filter(player => player.hits === thresholdHits);
             const totalPrize = payingPlayers.length * 30; // Asumiendo 30 BS por jugada para ambos
             const prizePool = totalPrize * 0.8;
-            
-            let prizeForMaxHits = 0;
-            if (currentGameType === 'polla') {
-                // Para polla, el premio principal se reparte si hay ganadores con 6 aciertos
-                prizeForMaxHits = (maxHits === 6 && winnersWithMaxHits.length > 0)
-                    ? Math.floor(prizePool / winnersWithMaxHits.length)
-                    : 0;
-            } else { // micro
-                // Para micro, el premio principal solo se reparte si hay ganadores con el máximo de 3 aciertos
-                prizeForMaxHits = (maxHits === 3 && winnersWithMaxHits.length > 0)
-                    ? Math.floor(prizePool / winnersWithMaxHits.length)
-                    : 0;
+
+            let prizeForWinners = 0;
+            if (winnersAtThreshold.length > 0) {
+                prizeForWinners = Math.floor(prizePool / winnersAtThreshold.length);
+            } else {
+                // Si no hay ganadores en el umbral fijo, no se cede el premio a niveles inferiores
+                prizeForWinners = 0;
             }
 
-            // Asignar premios a cada jugador
+            // Asignar premios a cada jugador (solo quienes alcanzan el umbral fijo reciben premio)
             resultsData.forEach(player => {
-                player.prize = calculatePrize(player.hits, player.gratis, maxHits, prizeForMaxHits, currentGameType);
+                player.prize = calculatePrize(player.hits, player.gratis, thresholdHits, prizeForWinners, currentGameType);
             });
 
             // Ordenar por aciertos (descendente) y luego por nombre
@@ -204,23 +200,18 @@ function displayWinningNumbers() {
 
 // Mostrar estadísticas resumen
 function displaySummaryStats() {
-    const maxHits = resultsData.length > 0 ? Math.max(...resultsData.map(p => p.hits)) : 0;
-    const winnersWithMaxHits = resultsData.filter(player => player.hits === maxHits);
+    // Usar umbrales fijos: 6 para polla, 3 para micro
+    const thresholdHits = currentGameType === 'polla' ? 6 : 3;
+    const winnersAtThreshold = resultsData.filter(player => player.hits === thresholdHits);
     const payingPlayers = resultsData.filter(player => !player.gratis);
-    const payingWinners = winnersWithMaxHits.filter(player => !player.gratis);
+    const payingWinners = winnersAtThreshold.filter(player => !player.gratis);
     
     const totalCollected = payingPlayers.length * 30; // Total de dinero recaudado
     const prizePool = totalCollected * 0.8; // 80% para premios
     
     let prizePerWinner = 0;
-    if (currentGameType === 'polla') {
-        if (maxHits === 6 && payingWinners.length > 0) {
-            prizePerWinner = Math.floor(prizePool / payingWinners.length);
-        }
-    } else { // micro
-        if (maxHits === 3 && payingWinners.length > 0) {
-            prizePerWinner = Math.floor(prizePool / payingWinners.length);
-        }
+    if (payingWinners.length > 0) {
+        prizePerWinner = Math.floor(prizePool / payingWinners.length);
     }
 
     // Actualizar título principal
@@ -231,9 +222,9 @@ function displaySummaryStats() {
     // Actualizar dinámicamente el label de ganadores
     const winnerLabel = document.getElementById('winnerLabel');
     if (winnerLabel) {
-        winnerLabel.textContent = `Ganadores (${maxHits} aciertos)`;
+        winnerLabel.textContent = `Ganadores (${thresholdHits} aciertos)`;
     }
-    document.getElementById('totalWinnersResult').textContent = winnersWithMaxHits.length;
+    document.getElementById('totalWinnersResult').textContent = winnersAtThreshold.length;
     document.getElementById('totalPrizeResult').textContent = `${totalCollected} BS`;
     document.getElementById('prizePerWinnerResult').textContent = prizePerWinner > 0 ? `${prizePerWinner} BS` : '0 BS';
 }

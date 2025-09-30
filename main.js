@@ -1167,22 +1167,25 @@ function updateCalculatedStats() {
     // 4. Calcular el pozo total para el premio mayor
     const pozoTotal = recaudadoParaPremio + poteSemanal + acumulado;
 
-    // 5. Identificar ganadores
-    const maxHits = currentGameType === 'polla' ? 6 : 3;
-    const ganadores = completePlayers.filter(player => player.hits === maxHits);
+    // 5. Identificar ganadores usando umbral fijo (6 para polla, 3 para micro)
+    const thresholdHits = currentGameType === 'polla' ? 6 : 3;
+    const ganadores = completePlayers.filter(player => player.hits === thresholdHits);
     const cantidadGanadores = ganadores.length; // Total de ganadores (pagados y gratis)
     
     const ganadoresPagados = ganadores.filter(player => player.gratis === false);
     const cantidadGanadoresPagados = ganadoresPagados.length; // Solo ganadores que pagaron
-    // 6. Calcular premio por ganador (pagado)
+    // 6. Calcular premio por ganador (pagado) SOLO si hay ganadores en el umbral fijo
     premioPorGanador = 0; // Resetear antes de calcular
     if (cantidadGanadoresPagados > 0) {
         premioPorGanador = Math.floor(pozoTotal / cantidadGanadoresPagados);
-    }
 
-    // 7. Aplicar premio garantizado si es necesario
-    if (cantidadGanadoresPagados > 0 && premioPorGanador < garantizado) {
-        premioPorGanador = garantizado;
+        // 7. Aplicar premio garantizado si es necesario
+        if (premioPorGanador < garantizado) {
+            premioPorGanador = garantizado;
+        }
+    } else {
+        // No hay ganadores en el nivel máximo; no ceder el premio a niveles inferiores
+        premioPorGanador = 0;
     }
 
     // 9. Actualizar la interfaz
