@@ -1454,15 +1454,21 @@ function reorderTableRows() {
 }
 
 // Función para limpiar selecciones
-function clearSelections() {
-    const selectedNumbers = document.querySelectorAll('.number-cell.selected');
-    selectedNumbers.forEach(cell => {
-        cell.classList.remove('selected', 'ring-yellow-400');
+async function clearSelections() {
+    // Limpiar UI
+    document.querySelectorAll('.number-cell').forEach(cell => {
+        cell.classList.remove('selected', 'ring-yellow-400', 'transform', 'scale-110', 'bg-yellow-300', 'text-black');
     });
     
+    // Limpiar en memoria
     winningNumbers.clear();
+    
+    // Actualizar en la base de datos
+    await updateWinningNumbersInDB();
+    
+    // Actualizar la tabla de jugadores
     updatePlayersTable();
-    console.log('Selecciones limpiadas');
+    console.log('Números ganadores limpiados correctamente');
 }
 
 // Función para actualizar display
