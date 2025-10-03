@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 function setupTabs() {
     const tabs = document.querySelectorAll('.tab-btn');
 
-const setActiveTab = (gameType) => {
+    const setActiveTab = (gameType) => {
         tabs.forEach(t => {
             if (t.dataset.game === gameType) {
                 t.classList.add('bg-white', 'text-fenix-red');
@@ -70,7 +70,20 @@ async function loadDataFromSupabase() {
     // Limpiar datos anteriores para evitar "fugas" de una pestaña a otra
     resultsData = [];
     winningNumbers = [];
+    let poteSemanal = 0;
+    let acumulado = 0;
+    let garantizado = 0;
+
     try {
+        // Cargar potes para el juego actual
+        const potesResult = await PotesDB.obtener(currentGameType);
+        if (potesResult.success && potesResult.data) {
+            const potData = potesResult.data;
+            poteSemanal = (potData.lunes || 0) + (potData.martes || 0) + (potData.miércoles || 0) + (potData.jueves || 0) + (potData.viernes || 0) + (potData.sábado || 0) + (potData.domingo || 0);
+            acumulado = potData.acumulado || 0;
+            garantizado = potData.garantizado || 0;
+        }
+
         // Cargar números ganadores según el tipo de juego
         let winningNumbersResult;
         if (currentGameType === 'polla') {
@@ -126,27 +139,38 @@ async function loadDataFromSupabase() {
                     };
                 });
 
-            // Determinar ganadores usando umbrales fijos: 6 para polla, 3 para micro
-            const thresholdHits = currentGameType === 'polla' ? 6 : 3;
+            // Encontrar el número máximo de aciertos
+            const maxHits = currentGameType === 'polla' ? 6 : 3;
 
             // Calcular premios
-            const payingPlayers = resultsData.filter(player => !player.gratis);
-            // Solo los jugadores que alcanzan el umbral fijo son considerados ganadores principales
-            const winnersAtThreshold = payingPlayers.filter(player => player.hits === thresholdHits);
-            const totalPrize = payingPlayers.length * 30; // Asumiendo 30 BS por jugada para ambos
-            const prizePool = totalPrize * 0.8;
+            const precioJugada = 30;
+            const gratisCount = resultsData.filter(p => p.gratis === true).length;
+            const payingPlayersCount = resultsData.length - gratisCount;
+            const premioTotal = payingPlayersCount * precioJugada;
+            const recaudadoParaPremio = premioTotal * 0.8;
+            
+            // Calcular el pozo total para el premio mayor
+            const pozoTotal = recaudadoParaPremio + poteSemanal;
 
-            let prizeForWinners = 0;
-            if (winnersAtThreshold.length > 0) {
-                prizeForWinners = Math.floor(prizePool / winnersAtThreshold.length);
-            } else {
-                // Si no hay ganadores en el umbral fijo, no se cede el premio a niveles inferiores
-                prizeForWinners = 0;
+            const winnersWithMaxHits = resultsData.filter(player => player.hits === maxHits && !player.gratis);
+
+            let prizeForMaxHits = 0;
+            if (winnersWithMaxHits.length > 0) {
+                prizeForMaxHits = Math.floor(pozoTotal / winnersWithMaxHits.length);
             }
 
-            // Asignar premios a cada jugador (solo quienes alcanzan el umbral fijo reciben premio)
+            // Aplicar premio garantizado si es necesario
+            if (winnersWithMaxHits.length > 0 && prizeForMaxHits < garantizado) {
+                prizeForMaxHits = garantizado;
+            }
+
+            // Asignar premios a cada jugador
             resultsData.forEach(player => {
-                player.prize = calculatePrize(player.hits, player.gratis, thresholdHits, prizeForWinners, currentGameType);
+                if (player.hits === maxHits && !player.gratis) {
+                    player.prize = prizeForMaxHits;
+                } else {
+                    player.prize = 0; // Otros premios se pueden calcular aquí si es necesario
+                }
             });
 
             // Ordenar por aciertos (descendente) y luego por nombre
@@ -159,7 +183,7 @@ async function loadDataFromSupabase() {
         }
         // Si ticketsResult.success es falso, resultsData ya está como []
     } catch (error) {
-        console.error('Error al cargar datos de resultados desde Supabase:', error);
+        console.error("Error cargando datos desde Supabase:", error);
         resultsData = [];
         winningNumbers = [];
     }
@@ -169,12 +193,15 @@ async function loadDataFromSupabase() {
 function calculatePrize(hits, isGratis, maxHits, prizeForMaxHits, gameType) {
     if (isGratis) return 0;
 
-    // Si el jugador es uno de los ganadores principales
-    if (hits === maxHits && prizeForMaxHits > 0) {
+    // El premio ya se calcula y asigna en loadDataFromSupabase
+    // Esta función puede ser simplificada o eliminada si no se usa en otro lugar.
+    const isCompleteWinner = (gameType === 'polla' && hits === 6) || 
+                           (gameType === 'micro' && hits === 3);
+
+    if (isCompleteWinner && prizeForMaxHits > 0) {
         return prizeForMaxHits;
     }
     
-    // No hay premios fijos para 'micro' en esta implementación, o para otros casos de 'polla'
     return 0;
 }
 
@@ -199,33 +226,49 @@ function displayWinningNumbers() {
 }
 
 // Mostrar estadísticas resumen
-function displaySummaryStats() {
-    // Usar umbrales fijos: 6 para polla, 3 para micro
-    const thresholdHits = currentGameType === 'polla' ? 6 : 3;
-    const winnersAtThreshold = resultsData.filter(player => player.hits === thresholdHits);
-    const payingPlayers = resultsData.filter(player => !player.gratis);
-    const payingWinners = winnersAtThreshold.filter(player => !player.gratis);
+async function displaySummaryStats() {
+    const maxPossibleHits = currentGameType === 'polla' ? 6 : 3;
     
-    const totalCollected = payingPlayers.length * 30; // Total de dinero recaudado
-    const prizePool = totalCollected * 0.8; // 80% para premios
-    
+    // Cargar datos del pote
+    let poteSemanal = 0;
+    let garantizado = 0;
+    const potesResult = await PotesDB.obtener(currentGameType);
+    if (potesResult.success && potesResult.data) {
+        const potData = potesResult.data;
+        poteSemanal = (potData.lunes || 0) + (potData.martes || 0) + (potData.miércoles || 0) + (potData.jueves || 0) + (potData.viernes || 0) + (potData.sábado || 0) + (potData.domingo || 0);
+        garantizado = potData.garantizado || 0;
+    }
+
+    const fullHitWinners = resultsData.filter(player => player.hits === maxPossibleHits);
+    const payingPlayersCount = resultsData.filter(player => !player.gratis).length;
+    const payingWinners = fullHitWinners.filter(player => !player.gratis);
+
+    const totalCollected = payingPlayersCount * 30;
+    const recaudadoParaPremio = totalCollected * 0.8;
+    const prizePool = recaudadoParaPremio + poteSemanal;
+
     let prizePerWinner = 0;
     if (payingWinners.length > 0) {
         prizePerWinner = Math.floor(prizePool / payingWinners.length);
     }
 
+    // Aplicar garantizado
+    if (payingWinners.length > 0 && prizePerWinner < garantizado) {
+        prizePerWinner = garantizado;
+    }
+
     // Actualizar título principal
     document.querySelector('.results-title').textContent = currentGameType === 'polla' ? 'RESULTADOS POLLA EL FÉNIX' : 'RESULTADOS MICRO';
-    
+
     document.getElementById('totalPlayersResult').textContent = resultsData.length;
-    
-    // Actualizar dinámicamente el label de ganadores
+
+    // Actualizar dinámicamente el label de ganadores (siempre todos los aciertos posibles)
     const winnerLabel = document.getElementById('winnerLabel');
     if (winnerLabel) {
-        winnerLabel.textContent = `Ganadores (${thresholdHits} aciertos)`;
+        winnerLabel.textContent = `Ganadores (${maxPossibleHits} aciertos)`;
     }
-    document.getElementById('totalWinnersResult').textContent = winnersAtThreshold.length;
-    document.getElementById('totalPrizeResult').textContent = `${totalCollected} BS`;
+    document.getElementById('totalWinnersResult').textContent = fullHitWinners.length;
+    document.getElementById('totalPrizeResult').textContent = `${prizePool.toFixed(0)} BS`;
     document.getElementById('prizePerWinnerResult').textContent = prizePerWinner > 0 ? `${prizePerWinner} BS` : '0 BS';
 }
 
@@ -279,18 +322,18 @@ function displayResultsTable(dataToDisplay) {
             row.classList.add(bgColorClass);
         }
 
-        // 1. Posición (compacta)
+        // 1. ID Jugador
         const positionCell = document.createElement('td');
         positionCell.className = 'px-2 py-2 font-bold text-center text-gray-900';
-        positionCell.textContent = player.position;
+        positionCell.textContent = player.id;
         if (player.hits === maxPossibleHits && player.hits > 0) {
-            positionCell.innerHTML = `🏆 ${player.position}`;
+            positionCell.innerHTML = `🏆 ${player.id}`;
         }
 
         // 2. Nombre
-    const nameCell = document.createElement('td');
+        const nameCell = document.createElement('td');
     nameCell.className = 'px-2 py-2 font-medium text-gray-900 truncate max-w-[220px]';
-    nameCell.textContent = player.name;
+        nameCell.textContent = player.name;
 
         // 3. Números Jugados
         const numbersCell = document.createElement('td');
@@ -310,13 +353,14 @@ function displayResultsTable(dataToDisplay) {
 
         // 4. Aciertos
         const hitsCell = document.createElement('td');
-        hitsCell.className = 'px-2 py-2 text-center';
-        // Aciertos como cuadro compacto
-        hitsCell.innerHTML = `<span class="inline-flex items-center justify-center bg-blue-600 text-white text-sm font-bold text-center rounded-md w-6 h-6 sm:w-7 sm:h-7">${player.hits}</span>`;
+        hitsCell.className = 'px-6 py-4 text-center';
+        hitsCell.className = 'px-2 sm:px-6 py-4 text-center';
+        hitsCell.innerHTML = `<span class="bg-blue-600 text-white text-sm font-bold px-3 py-1 rounded-full">${player.hits}</span>`;
 
         // 5. Premio
-    const prizeCell = document.createElement('td');
-    prizeCell.className = 'px-2 py-2 text-center font-bold';
+        const prizeCell = document.createElement('td');
+        prizeCell.className = 'px-6 py-4 text-center font-bold';
+        prizeCell.className = 'px-2 sm:px-6 py-4 text-center font-bold';
         if (player.prize > 0) {
             prizeCell.textContent = `${player.prize} BS`;
             prizeCell.className += ' text-black';
@@ -337,9 +381,9 @@ function displayResultsTable(dataToDisplay) {
 }
 
 // Función principal para mostrar todos los resultados
-function displayResults() {
+async function displayResults() {
     displayWinningNumbers();
-    displaySummaryStats();
+    await displaySummaryStats();
 
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -371,15 +415,15 @@ function exportResults() {
         return;
     }
 
-    let csvContent = 'Posición,Nombre,Números,Aciertos,Gratis,Premio\n';
+    let csvContent = 'ID,Nombre,Números,Aciertos,Gratis,Premio\n';
     
     dataToExport.forEach((player) => {
-        const position = player.position;
+        const id = player.id;
         const numbers = player.numbers.join('-');
         const gratis = player.gratis ? 'SÍ' : 'NO';
         const prize = player.prize > 0 ? `${player.prize} BS` : '-';
         
-        csvContent += `${position},"${player.name}","${numbers}",${player.hits},${gratis},"${prize}"\n`;
+        csvContent += `${id},"${player.name}","${numbers}",${player.hits},${gratis},"${prize}"\n`;
     });
 
     // Agregar información de números ganadores
@@ -434,31 +478,30 @@ async function resetCurrentGame() {
 
     const onConfirm = async () => {
         closeModal();
-        const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
+    const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
         try {
             let deleteResult;
             if (currentGameType === 'polla') {
+                // Asumo que existe una función `borrarTodas` en el objeto `JugadasPollaDB`
                 deleteResult = await JugadasPollaDB.borrarTodas();
             } else {
+                // Asumo que existe una función `borrarTodas` en el objeto `JugadasMicroDB`
                 deleteResult = await JugadasMicroDB.borrarTodas();
             }
 
-            if (deleteResult && deleteResult.success) {
-                // No borrar números ganadores ni pote — sólo recargar las vistas
-                showToast(`Todas las jugadas de la ${gameName} han sido borradas.`, 'success');
-                await loadAndDisplayData();
+            if (deleteResult.success) {
+                alert(`Todas las jugadas de la ${gameName} han sido borradas.`);
+                await loadAndDisplayData(); // Recargar la vista para reflejar los cambios
             } else {
-                const errorMessage = deleteResult && deleteResult.error ? deleteResult.error.message : 'Ocurrió un error desconocido.';
-                showToast(`Error al borrar las jugadas: ${errorMessage}`, 'error');
+                // Usar un mensaje de error más detallado si está disponible
+                const errorMessage = deleteResult.error ? deleteResult.error.message : 'Ocurrió un error desconocido.';
+                alert(`Error al borrar las jugadas: ${errorMessage}`);
             }
         } catch (error) {
             console.error(`Error al intentar resetear las jugadas de ${gameName}:`, error);
-            showToast('Se produjo un error inesperado. Revisa la consola para más detalles.', 'error');
+            alert('Se produjo un error inesperado. Revisa la consola para más detalles.');
         }
-    };
-
-    cancelBtn.addEventListener('click', onCancel);
-    confirmBtn.addEventListener('click', onConfirm);
+    }
 }
 
 // Exportar funciones para uso global
