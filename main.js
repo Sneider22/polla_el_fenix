@@ -1464,6 +1464,61 @@ function updateDisplay() {
 
 // ===== FUNCIONES PARA MODALES =====
 
+// Abrir modal de reiniciar jugadas
+function openResetPlaysModal() {
+    document.getElementById('resetPlaysModal').classList.remove('hidden');
+}
+
+// Cerrar modal de reiniciar jugadas
+function closeResetPlaysModal() {
+    document.getElementById('resetPlaysModal').classList.add('hidden');
+}
+
+// Confirmar y ejecutar reinicio de jugadas
+async function confirmResetPlays() {
+    try {
+        const confirmBtn = document.querySelector('#resetPlaysModal button[onclick="confirmResetPlays()"]');
+        const originalText = confirmBtn.textContent;
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Procesando...';
+
+        // Llamar a la función de reset en supabase-config.js
+        const response = await window.resetAllGameData();
+        
+        if (response && response.success) {
+            // Mostrar mensaje de éxito
+            showToast('¡Todas las jugadas han sido reiniciadas exitosamente!', 'success');
+            
+            // Limpiar las tablas
+            if (currentGameType === 'polla') {
+                document.getElementById('pollaTableBody').innerHTML = '';
+                pollaPlayers = [];
+            } else {
+                document.getElementById('microTableBody').innerHTML = '';
+                microPlayers = [];
+            }
+            
+            // Actualizar contadores
+            updatePlaysCounter();
+            updateCalculatedStats();
+            
+            // Cerrar el modal
+            closeResetPlaysModal();
+        } else {
+            throw new Error(response?.error || 'Error al reiniciar las jugadas');
+        }
+    } catch (error) {
+        console.error('Error al reiniciar jugadas:', error);
+        showToast('Ocurrió un error al reiniciar las jugadas: ' + (error.message || 'Error desconocido'), 'error');
+    } finally {
+        const confirmBtn = document.querySelector('#resetPlaysModal button[onclick="confirmResetPlays()"]');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Sí, reiniciar';
+        }
+    }
+}
+
 // Abrir modal de agregar jugador
 function openAddPlayerModal() {
     document.getElementById('addPlayerModal').classList.remove('hidden');

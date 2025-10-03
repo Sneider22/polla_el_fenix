@@ -136,9 +136,7 @@ const JugadasPollaDB = {
     async deleteAll() {
         try {
             const { error } = await supabaseClient
-                .from('jugadas_polla')
-                .delete()
-                .gt('id', 0); // Condición para borrar todo
+            .rpc('truncate_jugadas_polla');
             if (error) throw error;
             return { success: true };
         } catch (error) {
