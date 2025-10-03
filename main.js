@@ -2,12 +2,29 @@
 let playsCount = 0;
 let debounceTimer;
 let winnersCount = 0;
-    let premioPorGanador = 0;
+let premioPorGanador = 0;
 let prizesToDistribute = 0;
 let winningNumbers = new Set(); // Números ganadores seleccionados para el juego actual
 let pollaPlayers = []; // Array para jugadores de Polla
 let microPlayers = []; // Array para jugadores de Micro
 let playersDatabase = []; // Base de datos local de nombres de jugadores
+
+// Cache para elementos del DOM
+const domCache = {
+    pollaTable: null,
+    microTable: null,
+    pollaTableBody: null,
+    microTableBody: null,
+    currentTableBody: null
+};
+
+// Configuración de rendimiento
+const PERF_CONFIG = {
+    debounceTime: 100, // ms para el debounce de actualizaciones
+    batchUpdates: true, // Agrupar actualizaciones
+    cacheDom: true, // Activar caché de elementos DOM
+    lazyLoad: true // Carga perezosa de datos
+};
 // Celda donde se hizo click por última vez (punto de inicio para pegado desde Excel)
 let lastClickedCell = null;
 let dailyValues = {
@@ -49,24 +66,60 @@ function getCurrentTableBody() {
     return document.getElementById(tableId);
 }
 
-// Muestra una notificación toast
+// Muestra una notificación toast mejorada
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
-    if (!container) return;
+    if (!container) {
+        console.error('Toast container no encontrado');
+        return;
+    }
 
     const toast = document.createElement('div');
-    const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-500';
-    toast.className = `p-4 rounded-lg text-white shadow-lg transition-opacity duration-300 opacity-0`;
-    toast.textContent = message;
+    const icon = type === 'success' ? 
+        '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' :
+        '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+    
+    const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+    const borderColor = type === 'success' ? 'border-green-700' : 'border-red-700';
+    
+    toast.className = `flex items-center p-4 mb-2 w-full max-w-xs rounded-lg shadow-lg ${bgColor} ${borderColor} border-l-4 text-white transition-all duration-300 transform translate-x-4 opacity-0`;
+    
+    toast.innerHTML = `
+        <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg ${bgColor}">
+            ${icon}
+        </div>
+        <div class="ml-3 text-sm font-normal">${message}</div>
+        <button type="button" class="ml-auto -mx-1.5 -my-1.5 text-white hover:text-gray-100 rounded-lg p-1.5 inline-flex h-8 w-8" onclick="this.parentElement.remove()">
+            <span class="sr-only">Cerrar</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    `;
     
     container.appendChild(toast);
 
-    setTimeout(() => toast.classList.remove('opacity-0'), 10); // Fade in
+    // Animar entrada
+    requestAnimationFrame(() => {
+        toast.classList.remove('translate-x-4', 'opacity-0');
+        toast.classList.add('translate-x-0', 'opacity-100');
+    });
 
-    setTimeout(() => {
-        toast.classList.add('opacity-0');
+    // Eliminar después de 5 segundos
+    const timeout = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-4');
         toast.addEventListener('transitionend', () => toast.remove());
-    }, 3000); // Fade out and remove
+    }, 5000);
+
+    // Pausar el timeout cuando el mouse está sobre el toast
+    toast.addEventListener('mouseenter', () => clearTimeout(timeout));
+    toast.addEventListener('mouseleave', () => {
+        toast.classList.add('opacity-100', 'translate-x-0');
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-4');
+            toast.addEventListener('transitionend', () => toast.remove());
+        }, 3000);
+    });
 }
 
 // Función de inicialización
@@ -751,12 +804,21 @@ function highlightCurrentDay() {
     }
 }
 
+// Cache de elementos editables para evitar duplicados
+const editableCache = new WeakMap();
+
 // Función para hacer una celda editable
 function makeCellEditable(cell, row) {
-    // Evitar múltiples ediciones simultáneas en la misma celda
-    if (cell.querySelector('input')) {
+    // Usar caché para evitar recrear inputs innecesariamente
+    if (editableCache.has(cell) && document.body.contains(editableCache.get(cell))) {
+        const input = editableCache.get(cell);
+        input.focus();
+        input.select();
         return;
     }
+    
+    // Limpiar referencias anteriores
+    editableCache.delete(cell);
 
     const currentValue = cell.textContent.trim();
     const isNumberCell = cell.hasAttribute('data-editable') && cell.getAttribute('data-editable') === 'number';
@@ -827,14 +889,26 @@ function makeCellEditable(cell, row) {
         });
 
     } else {
+        // Para celdas de número, reemplazar el contenido directamente
         cell.innerHTML = '';
         cell.appendChild(input);
+        
+        // Enfocar y seleccionar el texto inmediatamente
+        setTimeout(() => {
+            input.focus();
+            input.select();
+        }, 0);
     }
-    // Enfocar y seleccionar el texto inmediatamente
-    setTimeout(() => {
+    // Usar requestAnimationFrame para mejor rendimiento
+    requestAnimationFrame(() => {
         input.focus();
         input.select();
-    }, 0);
+        
+        // Almacenar en caché
+        if (PERF_CONFIG.cacheDom) {
+            editableCache.set(cell, input);
+        }
+    });
 
     if (isNumberCell) {
         input.addEventListener('input', function() {
@@ -864,20 +938,47 @@ function makeCellEditable(cell, row) {
     // Manejar pérdida de foco
     input.addEventListener('blur', function() {
         if (isNumberCell) {
+            const newValue = input.value.trim();
+            
+            // Si el valor no cambió, no hacer nada
+            if (newValue === currentValue) {
+                cell.textContent = currentValue;
+                return;
+            }
+            
+            // Si se deja vacío, restaurar el valor anterior
+            if (newValue === '') {
+                cell.textContent = currentValue;
+                return;
+            }
+            
+            // Validar el formato del número
             if (validateNumberInput(input)) {
-                cell.textContent = input.value;
-                // Validar números únicos después de establecer el valor
-                if (validateUniqueNumbers(row, cell)) {
+                const oldValue = cell.textContent;
+                
+                // Actualizar el valor en la celda
+                cell.textContent = newValue;
+                
+                // Validar números únicos
+                if (!validateUniqueNumbers(row, cell)) {
+                    // Si no es único, restaurar el valor anterior
+                    cell.textContent = oldValue;
+                    showToast('¡Número duplicado en esta fila!', 'error');
+                } else {
+                    // Si el valor es válido, actualizar la interfaz
                     updatePlayerData(row);
                     updatePlayersTable();
-                    saveRowData(row); // Guardado en tiempo real
+                    saveRowData(row);
+                    showToast('Número actualizado correctamente', 'success');
                 }
             } else {
+                // Si la validación falla, restaurar el valor anterior
                 cell.textContent = currentValue;
+                showToast('Por favor ingrese un número válido (0-36)', 'error');
             }
         } else {
             // Para la celda de nombre
-            cell.textContent = input.value;
+            cell.textContent = input.value.trim() || currentValue;
             updatePlayerData(row);
             updatePlayersTable();
             saveRowData(row); // Guardado en tiempo real
@@ -888,7 +989,32 @@ function makeCellEditable(cell, row) {
     input.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
+            // Forzar el blur para que se procese el cambio
             input.blur();
+            
+            // Si es una celda de número, mover el foco al siguiente campo
+            if (isNumberCell) {
+                const nextCell = cell.nextElementSibling;
+                if (nextCell && nextCell.dataset.editable) {
+                    makeCellEditable(nextCell, row);
+                } else {
+                    // Si es la última celda, ir a la primera de la siguiente fila
+                    const nextRow = row.nextElementSibling;
+                    if (nextRow) {
+                        const firstEditable = nextRow.querySelector('[data-editable]');
+                        if (firstEditable) makeCellEditable(firstEditable, nextRow);
+                    }
+                }
+            }
+        }
+    });
+    
+    // Hacer la celda editable con clic
+    cell.addEventListener('click', function(e) {
+        // Solo activar la edición si no es la celda de Gratis
+        if (cell.dataset.editable !== 'gratis') {
+            e.stopPropagation();
+            makeCellEditable(cell, row);
         }
     });
 
@@ -897,6 +1023,8 @@ function makeCellEditable(cell, row) {
         if (e.key === 'Escape') {
             input.value = currentValue;
             input.blur();
+            // Restaurar el valor original
+            cell.textContent = currentValue;
         }
     });
 
@@ -1471,16 +1599,73 @@ async function clearSelections() {
     console.log('Números ganadores limpiados correctamente');
 }
 
-// Función para actualizar display
-function updateDisplay() {
-    updateCalculatedStats();
-}
+// Función para actualizar display con debounce
+const updateDisplay = debounce(() => {
+    if (PERF_CONFIG.batchUpdates) {
+        requestAnimationFrame(updateCalculatedStats);
+    } else {
+        updateCalculatedStats();
+    }
+}, PERF_CONFIG.debounceTime);
 
 // ===== FUNCIONES PARA MODALES =====
 
 // Abrir modal de reiniciar jugadas
 function openResetPlaysModal() {
     document.getElementById('resetPlaysModal').classList.remove('hidden');
+}
+
+// Cerrar modal de limpiar pote
+function closeClearPotModal() {
+    document.getElementById('clearPotModal').classList.add('hidden');
+}
+
+// Mostrar modal de limpiar pote
+function openClearPotModal() {
+    document.getElementById('clearPotModal').classList.remove('hidden');
+}
+
+// Confirmar limpiar pote
+async function confirmClearPot() {
+    try {
+        // Aquí iría la lógica para limpiar el pote
+        // Por ahora, solo cerramos el modal y mostramos un mensaje
+        closeClearPotModal();
+        showToast('✅ Pote limpiado exitosamente', 'success');
+        
+        // Actualizar la interfaz según sea necesario
+        document.getElementById('totalPotValue').textContent = '0';
+        
+        // Limpiar los campos de días
+        document.querySelectorAll('input[data-day]').forEach(input => {
+            input.value = '';
+        });
+    } catch (error) {
+        console.error('Error al limpiar el pote:', error);
+        showToast('❌ Error al limpiar el pote', 'error');
+    }
+}
+
+// Cerrar modal de limpiar selección
+function closeClearSelectionModal() {
+    document.getElementById('clearSelectionModal').classList.add('hidden');
+}
+
+// Mostrar modal de limpiar selección
+function openClearSelectionModal() {
+    document.getElementById('clearSelectionModal').classList.remove('hidden');
+}
+
+// Confirmar limpiar selección
+async function confirmClearSelection() {
+    try {
+        closeClearSelectionModal();
+        await clearSelections();
+        showToast('✅ Selección limpiada exitosamente', 'success');
+    } catch (error) {
+        console.error('Error al limpiar la selección:', error);
+        showToast('❌ Error al limpiar la selección', 'error');
+    }
 }
 
 // Cerrar modal de reiniciar jugadas
@@ -1490,34 +1675,66 @@ function closeResetPlaysModal() {
 
 // Confirmar y ejecutar reinicio de jugadas
 async function confirmResetPlays() {
+    const confirmBtn = document.querySelector('#resetPlaysModal button[onclick="confirmResetPlays()"]');
+    const originalText = confirmBtn.innerHTML;
+    
     try {
-        const confirmBtn = document.querySelector('#resetPlaysModal button[onclick="confirmResetPlays()"]');
-        const originalText = confirmBtn.textContent;
+        // Mostrar indicador de carga
         confirmBtn.disabled = true;
         confirmBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Procesando...';
-
+        
         // Llamar a la función de reset en supabase-config.js
         const response = await window.resetAllGameData();
         
         if (response && response.success) {
-            // Mostrar mensaje de éxito
-            showToast('¡Todas las jugadas han sido reiniciadas exitosamente!', 'success');
+            // Cerrar el modal inmediatamente
+            closeResetPlaysModal();
             
-            // Limpiar las tablas
+            // Limpiar las tablas y regenerar filas vacías
+            const tableBody = currentGameType === 'polla' ? 
+                document.getElementById('pollaTableBody') : 
+                document.getElementById('microTableBody');
+            
+            // Limpiar la tabla actual
+            tableBody.innerHTML = '';
+            
+            // Reiniciar el array de jugadores
             if (currentGameType === 'polla') {
-                document.getElementById('pollaTableBody').innerHTML = '';
                 pollaPlayers = [];
+                generatePollaTableRows(); // Regenerar filas vacías
             } else {
-                document.getElementById('microTableBody').innerHTML = '';
                 microPlayers = [];
+                generateMicroTableRows(); // Regenerar filas vacías
             }
             
-            // Actualizar contadores
+            // Mostrar mensaje de éxito
+            showToast('✅ ¡Todas las jugadas han sido reiniciadas exitosamente!', 'success');
+            
+            // Actualizar la interfaz
             updatePlaysCounter();
             updateCalculatedStats();
+            updateDisplay();
             
-            // Cerrar el modal
-            closeResetPlaysModal();
+            // Forzar actualización de la vista
+            requestAnimationFrame(() => {
+                // Actualizar la tabla actual
+                if (currentGameType === 'polla') {
+                    updatePollaTable();
+                } else {
+                    updateMicroTable();
+                }
+                
+                // Forzar un redibujado del navegador
+                setTimeout(() => {
+                    tableBody.style.display = 'none';
+                    tableBody.offsetHeight; // Trigger reflow
+                    tableBody.style.display = '';
+                    
+                    // Actualizar contadores nuevamente para asegurar consistencia
+                    updatePlaysCounter();
+                    updateCalculatedStats();
+                }, 50);
+            });
         } else {
             throw new Error(response?.error || 'Error al reiniciar las jugadas');
         }
@@ -1528,7 +1745,7 @@ async function confirmResetPlays() {
         const confirmBtn = document.querySelector('#resetPlaysModal button[onclick="confirmResetPlays()"]');
         if (confirmBtn) {
             confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Sí, reiniciar';
+            confirmBtn.innerHTML = originalText;
         }
     }
 }

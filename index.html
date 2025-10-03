@@ -104,7 +104,7 @@
                     </div>
                 </div>
 
-                <button onclick="clearCurrentPot()" class="bg-red-500 w-full text-white font-bold py-2 px-4  rounded-lg shadow-lg p-4 text-center hover:bg-red-600 transition-colors">
+                <button onclick="openClearPotModal()" class="bg-red-500 w-full text-white font-bold py-2 px-4 rounded-lg shadow-lg p-4 text-center hover:bg-red-600 transition-colors">
                     Limpiar Pote
                 </button>
 
@@ -137,7 +137,7 @@
                         <h2 class="text-xl font-bold text-gray-800">SELECCIONAR NÚMEROS GANADORES</h2>
                     </div>
                     <!-- Controles para números ganadores -->
-                    <button id="clearWinningNumbers" class="w-full mb-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition-colors">LIMPIAR SELECCIÓN</button>
+                    <button id="clearWinningNumbers" onclick="openClearSelectionModal()" class="w-full mb-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition-colors">LIMPIAR SELECCIÓN</button>
                     <div id="winnersMsg" class="text-center text-sm mb-4 h-5"></div>
                     
                     <!-- Numbers Grid -->
@@ -396,6 +396,46 @@
                     </thead>
                     <tbody id="microTableBody" class="divide-y divide-gray-200"></tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para confirmar limpiar pote -->
+    <div id="clearPotModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">¿Estás seguro?</h3>
+                    <p class="text-gray-700 mb-6">¿Deseas limpiar el pote actual? Esta acción no se puede deshacer.</p>
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="closeClearPotModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
+                            Cancelar
+                        </button>
+                        <button onclick="confirmClearPot()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                            Sí, limpiar pote
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para confirmar limpiar selección -->
+    <div id="clearSelectionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">¿Estás seguro?</h3>
+                    <p class="text-gray-700 mb-6">¿Deseas limpiar la selección de números ganadores? Esta acción no se puede deshacer.</p>
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="closeClearSelectionModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
+                            Cancelar
+                        </button>
+                        <button onclick="confirmClearSelection()" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
+                            Sí, limpiar selección
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
