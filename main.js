@@ -152,14 +152,14 @@ function generatePollaTableRows() {
         row.className = 'text-center text-sm hover:bg-gray-50';
         row.dataset.rowId = i;
         row.innerHTML = `
-            <td class="p-2 font-bold">${i}</td>
-            <td class="p-2 text-left cursor-pointer hover:bg-gray-100 rounded" data-editable="name"></td>
-            <td class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="0"></td>
-            <td class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="1"></td>
-            <td class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="2"></td>
-            <td class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="3"></td>
-            <td class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="4"></td>
-            <td class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="5"></td>
+            <td class="p-2 font-bold w-12">${i}</td>
+            <td class="p-2 text-left cursor-pointer hover:bg-gray-100 rounded whitespace-nowrap min-w-[200px]" data-editable="name"></td>
+            <td class="p-1 cursor-pointer hover:bg-gray-100 rounded w-12 text-center" data-editable="number" data-index="0"></td>
+            <td class="p-1 cursor-pointer hover:bg-gray-100 rounded w-12 text-center" data-editable="number" data-index="1"></td>
+            <td class="p-1 cursor-pointer hover:bg-gray-100 rounded w-12 text-center" data-editable="number" data-index="2"></td>
+            <td class="p-1 cursor-pointer hover:bg-gray-100 rounded w-12 text-center" data-editable="number" data-index="3"></td>
+            <td class="p-1 cursor-pointer hover:bg-gray-100 rounded w-12 text-center" data-editable="number" data-index="4"></td>
+            <td class="p-1 cursor-pointer hover:bg-gray-100 rounded w-12 text-center" data-editable="number" data-index="5"></td>
             <td class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="gratis">NO</td>
             <td class="p-2 font-bold" data-hits="0">0</td>
             <td class="p-2">
@@ -179,8 +179,8 @@ function generateMicroTableRows() {
         row.className = 'text-center text-sm hover:bg-gray-50';
         row.dataset.rowId = i;
         row.innerHTML = `
-            <td class="p-2 font-bold">${i}</td>
-            <td class="p-2 text-left cursor-pointer hover:bg-gray-100 rounded" data-editable="name"></td>
+            <td class="p-2 font-bold w-12">${i}</td>
+            <td class="p-2 text-left cursor-pointer hover:bg-gray-100 rounded whitespace-nowrap min-w-[200px]" data-editable="name"></td>
             <td class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="0"></td>
             <td class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="1"></td>
             <td class="p-2 cursor-pointer hover:bg-gray-100 rounded" data-editable="number" data-index="2"></td>
@@ -764,7 +764,15 @@ function makeCellEditable(cell, row) {
     const input = document.createElement('input');
     input.type = 'text';
     input.value = currentValue;
-    input.className = 'w-full text-center border border-blue-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+    
+    // Aplicar estilos diferentes para celdas de nombre vs números
+    if (cell.dataset.editable === 'name') {
+        input.className = 'w-full min-w-[100px] border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300';
+    } else {
+        input.className = 'w-12 text-center border border-blue-300 rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300';
+    }
+    
+    input.style.height = '1.75rem'; // Altura fija para mantener consistencia
 
     // Limpiar la celda y agregar el input
     if (cell.dataset.editable === 'name' && cell.dataset.editable !== 'gratis') {
