@@ -200,7 +200,7 @@ async function loadPotsFromSupabase() {
 function generatePollaTableRows() {
     const tableBody = document.getElementById('pollaTableBody');
     tableBody.innerHTML = '';
-    for (let i = 1; i <= 500; i++) {
+    for (let i = 1; i <= 1500; i++) {
         const row = document.createElement('tr');
         row.className = 'text-center text-sm hover:bg-gray-50';
         row.dataset.rowId = i;
@@ -227,7 +227,7 @@ function generatePollaTableRows() {
 function generateMicroTableRows() {
     const tableBody = document.getElementById('microTableBody');
     tableBody.innerHTML = '';
-    for (let i = 1; i <= 500; i++) {
+    for (let i = 1; i <= 1500; i++) {
         const row = document.createElement('tr');
         row.className = 'text-center text-sm hover:bg-gray-50';
         row.dataset.rowId = i;
