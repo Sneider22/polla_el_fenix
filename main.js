@@ -750,7 +750,6 @@ async function saveRowData(row) {
         // Actualizar datos locales y UI con el nuevo dbId
         playerData.dbId = savedData.id;
         row.dataset.dbId = savedData.id;
-        showToast(`Jugada #${playerData.id} guardada.`, 'success');
     } else {
         showToast(`Error al guardar jugada #${playerData.id}: ${res.error}`, 'error');
     }
