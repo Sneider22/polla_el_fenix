@@ -68,10 +68,23 @@ function getCurrentTableBody() {
 
 // Muestra una notificación toast mejorada
 function showToast(message, type = 'success') {
-    const container = document.getElementById('toast-container');
+    let container = document.getElementById('toast-container');
     if (!container) {
-        console.error('Toast container no encontrado');
-        return;
+        // Crear contenedor de toasts dinámicamente y añadirlo al body
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        // Estilos mínimos para posicionar los toasts (puedes ajustarlos en CSS)
+        container.style.position = 'fixed';
+        container.style.right = '1rem';
+        container.style.top = '1rem';
+        container.style.zIndex = '9999';
+    container.style.display = 'flex';
+    // Usar column-reverse para que los toasts nuevos queden arriba, pero
+    // manejaremos la inserción también para mayor control.
+    container.style.flexDirection = 'column-reverse';
+    container.style.alignItems = 'flex-end';
+    container.style.gap = '0.5rem';
+        document.body.appendChild(container);
     }
 
     const toast = document.createElement('div');
@@ -82,22 +95,36 @@ function showToast(message, type = 'success') {
     const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
     const borderColor = type === 'success' ? 'border-green-700' : 'border-red-700';
     
-    toast.className = `flex items-center p-4 mb-2 w-full max-w-xs rounded-lg shadow-lg ${bgColor} ${borderColor} border-l-4 text-white transition-all duration-300 transform translate-x-4 opacity-0`;
-    
+    // Toaster reducido: menos ancho, paddings pequeños y texto más discreto
+    toast.className = `flex items-center p-2 mb-2 w-full max-w-xs rounded-md shadow ${bgColor} ${borderColor} border-l-4 text-white transition-all duration-200 transform translate-x-4 opacity-0`;
+
     toast.innerHTML = `
-        <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg ${bgColor}">
-            ${icon}
+        <div class="inline-flex items-center justify-center flex-shrink-0 w-6 h-6 rounded-md ${bgColor}">
+            ${icon.replace('w-5 h-5', 'w-4 h-4')}
         </div>
-        <div class="ml-3 text-sm font-normal">${message}</div>
-        <button type="button" class="ml-auto -mx-1.5 -my-1.5 text-white hover:text-gray-100 rounded-lg p-1.5 inline-flex h-8 w-8" onclick="this.parentElement.remove()">
+        <div class="ml-2 text-xs font-medium">${message}</div>
+        <button type="button" class="ml-auto -mx-1 -my-1 text-white hover:text-gray-100 rounded p-1 inline-flex h-6 w-6" onclick="this.parentElement.remove()">
             <span class="sr-only">Cerrar</span>
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </button>
     `;
     
-    container.appendChild(toast);
+    // Insertar al inicio para asegurar que el más reciente quede arriba
+    if (container.firstChild) {
+        container.insertBefore(toast, container.firstChild);
+    } else {
+        container.appendChild(toast);
+    }
+
+    // Mantener como máximo 3 toasts visibles al mismo tiempo.
+    const MAX_TOASTS = 3;
+    while (container.children.length > MAX_TOASTS) {
+        const oldest = container.lastElementChild;
+        if (oldest) oldest.remove();
+        else break;
+    }
 
     // Animar entrada
     requestAnimationFrame(() => {
@@ -105,20 +132,21 @@ function showToast(message, type = 'success') {
         toast.classList.add('translate-x-0', 'opacity-100');
     });
 
-    // Eliminar después de 5 segundos
+    // Eliminar después de 2 segundos (menos intrusivo)
     const timeout = setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-x-4');
         toast.addEventListener('transitionend', () => toast.remove());
-    }, 5000);
+    }, 2000);
 
     // Pausar el timeout cuando el mouse está sobre el toast
     toast.addEventListener('mouseenter', () => clearTimeout(timeout));
     toast.addEventListener('mouseleave', () => {
+        // Reiniciar pequeño timer al salir (dar 1s extra)
         toast.classList.add('opacity-100', 'translate-x-0');
         setTimeout(() => {
             toast.classList.add('opacity-0', 'translate-x-4');
             toast.addEventListener('transitionend', () => toast.remove());
-        }, 3000);
+        }, 1000);
     });
 }
 
@@ -202,11 +230,11 @@ function generatePollaTableRows() {
     tableBody.innerHTML = '';
     for (let i = 1; i <= 1500; i++) {
         const row = document.createElement('tr');
-        row.className = 'text-center text-sm hover:bg-gray-50';
+        row.className = 'text-center text-sm hover:bg-gray-50 ';
         row.dataset.rowId = i;
         row.innerHTML = `
-            <td class="p-2 font-bold w-12">${i}</td>
-            <td class="p-2 text-left cursor-pointer hover:bg-gray-100 rounded whitespace-nowrap min-w-[200px]" data-editable="name"></td>
+            <td class="font-bold w-12">${i}</td>
+            <td class="p-2 max-sm:text-[12px] text-left cursor-pointer hover:bg-gray-100 rounded whitespace-nowrap  max-sm:max-w-[20px] overflow-hidden bg-red text-clip " data-editable="name"></td>
             <td class="p-1 cursor-pointer hover:bg-gray-100 rounded w-12 text-center" data-editable="number" data-index="0"></td>
             <td class="p-1 cursor-pointer hover:bg-gray-100 rounded w-12 text-center" data-editable="number" data-index="1"></td>
             <td class="p-1 cursor-pointer hover:bg-gray-100 rounded w-12 text-center" data-editable="number" data-index="2"></td>
@@ -1301,7 +1329,7 @@ function updateCalculatedStats() {
     const garantizado = dailyValues[currentGameType].garantizado || 0;
     const acumulado = dailyValues[currentGameType].acumulado || 0;
     // 4. Calcular el pozo total para el premio mayor
-    const pozoTotal = recaudadoParaPremio + poteSemanal + acumulado;
+    const pozoTotal = recaudadoParaPremio - poteSemanal + acumulado;
 
     // 5. Identificar ganadores usando umbral fijo (6 para polla, 3 para micro)
     const thresholdHits = currentGameType === 'polla' ? 6 : 3;
