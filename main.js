@@ -33,6 +33,10 @@ let dailyValues = {
 };
 let currentGameType = 'polla'; // 'polla' o 'micro'
 
+// Control global para mostrar toasts de éxito/informativos.
+// Poner a false para desactivar notificaciones de carga y reducir trabajo en el DOM.
+const SHOW_SUCCESS_TOASTS = false;
+
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
     initializeGame();
@@ -66,89 +70,7 @@ function getCurrentTableBody() {
     return document.getElementById(tableId);
 }
 
-// Muestra una notificación toast mejorada
-function showToast(message, type = 'success') {
-    let container = document.getElementById('toast-container');
-    if (!container) {
-        // Crear contenedor de toasts dinámicamente y añadirlo al body
-        container = document.createElement('div');
-        container.id = 'toast-container';
-        // Estilos mínimos para posicionar los toasts (puedes ajustarlos en CSS)
-        container.style.position = 'fixed';
-        container.style.right = '1rem';
-        container.style.top = '1rem';
-        container.style.zIndex = '9999';
-    container.style.display = 'flex';
-    // Usar column-reverse para que los toasts nuevos queden arriba, pero
-    // manejaremos la inserción también para mayor control.
-    container.style.flexDirection = 'column-reverse';
-    container.style.alignItems = 'flex-end';
-    container.style.gap = '0.5rem';
-        document.body.appendChild(container);
-    }
 
-    const toast = document.createElement('div');
-    const icon = type === 'success' ? 
-        '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' :
-        '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
-    
-    const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
-    const borderColor = type === 'success' ? 'border-green-700' : 'border-red-700';
-    
-    // Toaster reducido: menos ancho, paddings pequeños y texto más discreto
-    toast.className = `flex items-center p-2 mb-2 w-full max-w-xs rounded-md shadow ${bgColor} ${borderColor} border-l-4 text-white transition-all duration-200 transform translate-x-4 opacity-0`;
-
-    toast.innerHTML = `
-        <div class="inline-flex items-center justify-center flex-shrink-0 w-6 h-6 rounded-md ${bgColor}">
-            ${icon.replace('w-5 h-5', 'w-4 h-4')}
-        </div>
-        <div class="ml-2 text-xs font-medium">${message}</div>
-        <button type="button" class="ml-auto -mx-1 -my-1 text-white hover:text-gray-100 rounded p-1 inline-flex h-6 w-6" onclick="this.parentElement.remove()">
-            <span class="sr-only">Cerrar</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-        </button>
-    `;
-    
-    // Insertar al inicio para asegurar que el más reciente quede arriba
-    if (container.firstChild) {
-        container.insertBefore(toast, container.firstChild);
-    } else {
-        container.appendChild(toast);
-    }
-
-    // Mantener como máximo 3 toasts visibles al mismo tiempo.
-    const MAX_TOASTS = 3;
-    while (container.children.length > MAX_TOASTS) {
-        const oldest = container.lastElementChild;
-        if (oldest) oldest.remove();
-        else break;
-    }
-
-    // Animar entrada
-    requestAnimationFrame(() => {
-        toast.classList.remove('translate-x-4', 'opacity-0');
-        toast.classList.add('translate-x-0', 'opacity-100');
-    });
-
-    // Eliminar después de 2 segundos (menos intrusivo)
-    const timeout = setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-x-4');
-        toast.addEventListener('transitionend', () => toast.remove());
-    }, 2000);
-
-    // Pausar el timeout cuando el mouse está sobre el toast
-    toast.addEventListener('mouseenter', () => clearTimeout(timeout));
-    toast.addEventListener('mouseleave', () => {
-        // Reiniciar pequeño timer al salir (dar 1s extra)
-        toast.classList.add('opacity-100', 'translate-x-0');
-        setTimeout(() => {
-            toast.classList.add('opacity-0', 'translate-x-4');
-            toast.addEventListener('transitionend', () => toast.remove());
-        }, 1000);
-    });
-}
 
 // Función de inicialización
 async function initializeGame() {
@@ -192,13 +114,30 @@ async function initializeGame() {
     // Cargar jugadores para autocompletado
     loadAllPlayersForAutocomplete();
 
-    // Registrar listener para pegado desde Excel/Sheets
+    // Registrar listener global para pegado. Evitar manejar aquí pegados que vengan
+    // desde dentro de los cuerpos de tabla (ya tienen listeners específicos) o desde
+    // inputs/areas editables.
     document.addEventListener('paste', function(e) {
-        // Solo manejar pegados cuando el foco esté dentro de las tablas o no en un campo de texto
+        try {
+            const target = e.target;
+            if (target) {
+                // Si el evento vino desde dentro de los cuerpos de tabla, no procesarlo aquí
+                if (target.closest && (target.closest('#pollaTableBody') || target.closest('#microTableBody'))) {
+                    return;
+                }
+                // Si el foco está en un input/textarea o elemento contenteditable, ignorar
+                const tag = target.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable) {
+                    return;
+                }
+            }
+        } catch (err) {
+            // En caso de error en la comprobación, seguir y dejar que handleTablePaste haga su propia validación
+        }
         handleTablePaste(e);
     });
 
-    // También añadir listeners específicos a los cuerpos de las tablas para asegurar comportamiento consistente
+    // Añadir listeners específicos a los cuerpos de las tablas para asegurar comportamiento consistente
     const pollaBody = document.getElementById('pollaTableBody');
     const microBody = document.getElementById('microTableBody');
     if (pollaBody) pollaBody.addEventListener('paste', handleTablePaste);
@@ -297,7 +236,7 @@ function setupRowEvents(row) {
 }
 
 // Manejar pegado desde Excel/Sheets para poblar múltiples filas a la vez
-function handleTablePaste(e) {
+async function handleTablePaste(e) {
     // Solo procesar si hay texto en el clipboard
     const clipboardData = (e.clipboardData || window.clipboardData);
     if (!clipboardData) return;
@@ -324,8 +263,16 @@ function handleTablePaste(e) {
     if (lines.length === 0) return;
 
     let pastedCount = 0;
+    const rowsToSave = [];
     for (let i = 0; i < lines.length; i++) {
-        const cols = lines[i].split(/\t|,|;/).map(c => c.trim());
+    // Preferir '|' como delimitador (evita romper nombres que contienen ',' o '.')
+    let delimiter = '|';
+    if (lines[i].includes('|')) delimiter = '|';
+    else if (lines[i].includes('\t')) delimiter = '\t';
+    else if (lines[i].includes(';')) delimiter = ';';
+    else delimiter = ','; // último recurso
+
+    const cols = lines[i].split(delimiter).map(c => c.trim());
         const targetRowIndex = parseInt(startRow.dataset.rowId || startRow.rowIndex) + i;
 
         // Encontrar la fila objetivo por data-row-id
@@ -342,7 +289,11 @@ function handleTablePaste(e) {
         // Números
         const numberCells = [...targetRow.querySelectorAll('td[data-editable="number"]')];
         for (let j = 0; j < numberCells.length; j++) {
-            const val = cols[1 + j] || '';
+            let val = (cols[1 + j] !== undefined) ? String(cols[1 + j]).trim() : '';
+            // Conversión especial solicitada: 37 -> '0', 38 -> '00'
+            if (val === '37') val = '0';
+            else if (val === '38') val = '00';
+            // Copiar exactamente (ya está trimmeado); si está vacío, quedará vacío
             numberCells[j].textContent = val;
         }
 
@@ -354,15 +305,46 @@ function handleTablePaste(e) {
             gratisCell.textContent = (txt === 's' || txt === 'si' || txt === 'sí' || txt === 'yes' || txt === 'y') ? 'SÍ' : 'NO';
         }
 
-        // Actualizar datos y guardar si la fila tiene al menos un número
+        // Actualizar datos en memoria (rápido) y marcar para guardado en lote
         updatePlayerData(targetRow);
-        updatePlayersTable();
 
-        // Guardar asincrónicamente la fila si tiene nombre o números
+        // Guardar en lote si la fila tiene nombre o números
         const hasAny = (nameCell && nameCell.textContent.trim().length > 0) || numberCells.some(c => c.textContent.trim().length > 0);
         if (hasAny) {
-            saveRowData(targetRow);
+            rowsToSave.push(targetRow);
             pastedCount++;
+        }
+    }
+
+    // Actualizar UI una sola vez para mejorar rendimiento
+    try {
+        updatePlayersTable();
+        updateCalculatedStats();
+        updatePlaysCounter();
+    } catch (uiErr) {
+        console.warn('Error actualizando UI tras pegado masivo:', uiErr);
+    }
+
+    // Guardar filas en la BD con concurrencia limitada para no saturar el cliente/servidor
+    if (rowsToSave.length > 0) {
+        const tasks = rowsToSave.map(r => async () => { try { await saveRowData(r); } catch(e){ console.error('Error saving row after paste', e); } });
+        // Ejecutar con concurrencia 5
+        const runWithConcurrency = async (tasks, limit) => {
+            let i = 0;
+            const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
+                while (i < tasks.length) {
+                    const idx = i++;
+                    await tasks[idx]();
+                }
+            });
+            await Promise.all(workers);
+        };
+
+        // Fire-and-forget but wait a short tick so caller can continue; still await to report when done
+        try {
+            await runWithConcurrency(tasks, 5);
+        } catch (err) {
+            console.error('Error en guardado por lotes tras pegado:', err);
         }
     }
 
@@ -729,6 +711,10 @@ async function saveRowData(row) {
         return; // No guardar filas incompletas
     }
 
+    // Evitar guardados concurrentes para la misma fila
+    if (playerData._saving) return;
+    playerData._saving = true;
+
     const dbManager = currentGameType === 'polla' ? JugadasPollaDB : JugadasMicroDB;
     
     const dataToSave = {
@@ -753,6 +739,8 @@ async function saveRowData(row) {
     } else {
         showToast(`Error al guardar jugada #${playerData.id}: ${res.error}`, 'error');
     }
+    // Guardado finalizado
+    playerData._saving = false;
 }
 
 async function resetAll() {
