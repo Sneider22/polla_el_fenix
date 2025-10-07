@@ -275,7 +275,7 @@ async function displaySummaryStats() {
         // Si no hay datos, el día actual siempre aporta 143
         poteSemanal = 143;
     }
-
+    const precioJugada = 50;
     const fullHitWinners = resultsData.filter(player => player.hits === maxPossibleHits);
     const payingPlayersCount = resultsData.filter(player => !player.gratis).length;
     const payingWinners = fullHitWinners.filter(player => !player.gratis);
