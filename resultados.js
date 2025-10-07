@@ -280,7 +280,7 @@ async function displaySummaryStats() {
     const payingPlayersCount = resultsData.filter(player => !player.gratis).length;
     const payingWinners = fullHitWinners.filter(player => !player.gratis);
 
-    const totalCollected = payingPlayersCount * 30;
+    const totalCollected = payingPlayersCount * precioJugada;
     const recaudadoParaPremio = totalCollected * 0.8;
     // Restar el pote semanal del premio total según la nueva regla
     let prizePool = recaudadoParaPremio + poteSemanal - 143;
