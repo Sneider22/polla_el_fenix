@@ -264,56 +264,95 @@ async function handleTablePaste(e) {
 
     let pastedCount = 0;
     const rowsToSave = [];
+
+    const tbodyId = currentGameType === 'polla' ? 'pollaTableBody' : 'microTableBody';
+    const tbody = document.getElementById(tbodyId);
+    const allRows = Array.from(tbody.querySelectorAll('tr'));
+    const totalRows = allRows.length;
+
+    // Indice inicial desde el que buscaremos filas disponibles (data-row-id numérico)
+    let currentIndex = parseInt(startRow.dataset.rowId || startRow.rowIndex, 10);
+    if (isNaN(currentIndex) || currentIndex < 1) currentIndex = 1;
+
     for (let i = 0; i < lines.length; i++) {
-    // Preferir '|' como delimitador (evita romper nombres que contienen ',' o '.')
-    let delimiter = '|';
-    if (lines[i].includes('|')) delimiter = '|';
-    else if (lines[i].includes('\t')) delimiter = '\t';
-    else if (lines[i].includes(';')) delimiter = ';';
-    else delimiter = ','; // último recurso
+        // Preferir '|' como delimitador (evita romper nombres que contienen ',' o '.')
+        let delimiter = '|';
+        if (lines[i].includes('|')) delimiter = '|';
+        else if (lines[i].includes('\t')) delimiter = '\t';
+        else if (lines[i].includes(';')) delimiter = ';';
+        else delimiter = ','; // último recurso
 
-    const cols = lines[i].split(delimiter).map(c => c.trim());
-        const targetRowIndex = parseInt(startRow.dataset.rowId || startRow.rowIndex) + i;
+        const cols = lines[i].split(delimiter).map(c => c.trim());
 
-        // Encontrar la fila objetivo por data-row-id
-        const tbodyId = currentGameType === 'polla' ? 'pollaTableBody' : 'microTableBody';
-        const targetRow = document.querySelector(`#${tbodyId} tr[data-row-id="${targetRowIndex}"]`);
-        if (!targetRow) continue;
+        // Buscar la siguiente fila disponible (a partir de currentIndex) para mantener el orden
+        let foundRow = null;
+        let searchIdx = currentIndex;
+        while (searchIdx <= totalRows) {
+            const candidate = tbody.querySelector(`tr[data-row-id="${searchIdx}"]`);
+            if (!candidate) { searchIdx++; continue; }
 
-        // Nombre y números: asumir first col = nombre, siguientes = números (3 o 6)
-        const nameCell = targetRow.querySelector('td[data-editable="name"]');
+            // Consideramos 'disponible' si la celda de nombre y las celdas de número están vacías
+            const nameCellCandidate = candidate.querySelector('td[data-editable="name"]');
+            const numberCellsCandidate = Array.from(candidate.querySelectorAll('td[data-editable="number"]'));
+            const nameEmpty = !nameCellCandidate || nameCellCandidate.textContent.trim().length === 0;
+            const numbersEmpty = numberCellsCandidate.every(c => c.textContent.trim().length === 0);
+
+            if (nameEmpty && numbersEmpty) {
+                foundRow = candidate;
+                break;
+            }
+            searchIdx++;
+        }
+
+        // Si no encontramos una fila vacía, usaremos currentIndex aunque sobrescriba; seguir desde allí
+        if (!foundRow) {
+            foundRow = tbody.querySelector(`tr[data-row-id="${currentIndex}"]`);
+        }
+
+        if (!foundRow) {
+            // No hay más filas disponibles
+            break;
+        }
+
+        // Nombre y números: first col = nombre, siguientes = números (3 o 6)
+        const nameCell = foundRow.querySelector('td[data-editable="name"]');
         if (cols.length >= 1 && nameCell) {
             nameCell.textContent = cols[0];
         }
 
         // Números
-        const numberCells = [...targetRow.querySelectorAll('td[data-editable="number"]')];
+        const numberCells = Array.from(foundRow.querySelectorAll('td[data-editable="number"]'));
         for (let j = 0; j < numberCells.length; j++) {
             let val = (cols[1 + j] !== undefined) ? String(cols[1 + j]).trim() : '';
             // Conversión especial solicitada: 37 -> '0', 38 -> '00'
             if (val === '37') val = '0';
             else if (val === '38') val = '00';
-            // Copiar exactamente (ya está trimmeado); si está vacío, quedará vacío
             numberCells[j].textContent = val;
         }
 
         // Gratis si se proporciona (col siguiente a los números)
-        const gratisCell = targetRow.querySelector('td[data-editable="gratis"]');
+        const gratisCell = foundRow.querySelector('td[data-editable="gratis"]');
         const gratisColIndex = 1 + numberCells.length;
         if (gratisCell && cols[gratisColIndex] !== undefined) {
             const txt = cols[gratisColIndex].toString().toLowerCase();
             gratisCell.textContent = (txt === 's' || txt === 'si' || txt === 'sí' || txt === 'yes' || txt === 'y') ? 'SÍ' : 'NO';
+            gratisCell.classList.toggle('text-green-600', gratisCell.textContent === 'SÍ');
+            gratisCell.classList.toggle('font-bold', gratisCell.textContent === 'SÍ');
         }
 
-        // Actualizar datos en memoria (rápido) y marcar para guardado en lote
-        updatePlayerData(targetRow);
+    // Actualizar datos en memoria y marcar para guardado en lote
+    updatePlayerData(foundRow);
+    // Log para depuración: qué fila recibió qué datos del portapapeles
+    try { console.debug('[handleTablePaste] assigned rowId=%s fromLine=%d name=%s', foundRow.dataset.rowId, i, (cols[0]||'')); } catch(e){}
 
-        // Guardar en lote si la fila tiene nombre o números
         const hasAny = (nameCell && nameCell.textContent.trim().length > 0) || numberCells.some(c => c.textContent.trim().length > 0);
         if (hasAny) {
-            rowsToSave.push(targetRow);
+            rowsToSave.push(foundRow);
             pastedCount++;
         }
+
+        // Avanzar currentIndex para la siguiente línea (mantener orden)
+        currentIndex = (parseInt(foundRow.dataset.rowId, 10) || currentIndex) + 1;
     }
 
     // Actualizar UI una sola vez para mejorar rendimiento
@@ -724,11 +763,18 @@ async function saveRowData(row) {
     playerData.numbers.forEach((num, i) => dataToSave[`nro_${i+1}`] = num);
 
     let res;
-    if (playerData.dbId) {
-        dataToSave.id = playerData.dbId;
-        res = await dbManager.actualizar([dataToSave]);
-    } else {
-        res = await dbManager.crear([dataToSave]);
+    try {
+        console.debug('[saveRowData] saving rowId=%s dbId=%s name=%s numbers=%o', playerData.id, playerData.dbId, playerData.name, playerData.numbers);
+        if (playerData.dbId) {
+            dataToSave.id = playerData.dbId;
+            res = await dbManager.actualizar([dataToSave]);
+        } else {
+            res = await dbManager.crear([dataToSave]);
+        }
+        console.debug('[saveRowData] db response for rowId=%s: %o', playerData.id, res);
+    } catch (errSave) {
+        console.error('[saveRowData] error saving rowId=%s: %o', playerData.id, errSave);
+        res = { success: false, error: errSave && errSave.message ? errSave.message : String(errSave) };
     }
 
     if (res.success && res.data && res.data.length > 0) {
@@ -1307,7 +1353,7 @@ function updateCalculatedStats() {
     const completePlayers = currentPlayers.filter(p => p.isComplete);
 
     // 3. Calcular recaudación
-    const precioJugada = 30;
+    const precioJugada = 50;
     const gratisCount = completePlayers.filter(p => p.gratis === true).length;
     const payingPlayersCount = completePlayers.length - gratisCount;
     const premioTotal = payingPlayersCount * precioJugada;
@@ -1866,7 +1912,26 @@ async function loadTicketsFromSupabase() {
             // Ordenar por ID para asegurar un orden consistente
             res.data.sort((a, b) => a.id - b.id);
 
-            res.data.forEach((ticketData, index) => {
+            // Deduplicar registros: primero por db id, si no hay id usar huella 'nombre|nro_1|nro_2|...'
+            const seenDbIds = new Set();
+            const seenFingerprints = new Set();
+            const deduped = [];
+
+            for (const ticketData of res.data) {
+                if (!ticketData) continue;
+                if (ticketData.id && seenDbIds.has(ticketData.id)) continue;
+                const fpParts = [ticketData.nombre_jugador || ''];
+                for (let i = 1; i <= numCount; i++) fpParts.push(String(ticketData[`nro_${i}`] || ''));
+                const fp = fpParts.join('|').toLowerCase();
+                if ((!ticketData.id && seenFingerprints.has(fp))) continue;
+
+                if (ticketData.id) seenDbIds.add(ticketData.id);
+                seenFingerprints.add(fp);
+                deduped.push(ticketData);
+            }
+
+            // Ahora poblar filas con los registros deduplicados
+            deduped.forEach((ticketData, index) => {
                 if (ticketData.nombre_jugador && index < rows.length) {
                     const row = rows[index]; // La fila <tr>
                     const cells = row.cells; // La colección de <td>
