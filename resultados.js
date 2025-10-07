@@ -162,7 +162,7 @@ async function loadDataFromSupabase() {
             const maxHits = currentGameType === 'polla' ? 6 : 3;
 
             // Calcular premios
-            const precioJugada = 30;
+            const precioJugada = 50;
             const gratisCount = resultsData.filter(p => p.gratis === true).length;
             const payingPlayersCount = resultsData.length - gratisCount;
             const premioTotal = payingPlayersCount * precioJugada;
