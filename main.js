@@ -1870,61 +1870,64 @@ async function confirmResetPlays() {
         confirmBtn.disabled = true;
         confirmBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Procesando...';
         
-        // Llamar a la función de reset en supabase-config.js
-        const response = await window.resetAllGameData();
-        
-        if (response && response.success) {
-            // Cerrar el modal inmediatamente
+        // Ejecutar reset específico para el modo actual (NO usar el RPC global)
+        const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
+        const jugadasDB = currentGameType === 'polla' ? JugadasPollaDB : JugadasMicroDB;
+
+        try {
+            // Borrar solo las jugadas del juego actual
+            const jugadasRes = await jugadasDB.deleteAll();
+            if (!jugadasRes.success) throw new Error(jugadasRes.error || `Error borrando jugadas de ${gameName}`);
+
+            // Poner el pote a cero para el JUEGO ACTUAL (no eliminar el registro)
+            if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
+                const zeros = { lunes: 0, martes: 0, miércoles: 0, jueves: 0, viernes: 0, sábado: 0, domingo: 0, garantizado: 0, acumulado: 0 };
+                const poteRes = await PotesDB.actualizar(currentGameType, zeros);
+                if (!poteRes.success) console.warn(`No se pudo poner a cero el pote de ${gameName}:`, poteRes.error);
+            }
+
+            // Eliminar números ganadores del modo actual
+            try {
+                if (currentGameType === 'polla') {
+                    if (typeof ResultadosNumerosDB !== 'undefined' && ResultadosNumerosDB.eliminarUltimo) await ResultadosNumerosDB.eliminarUltimo();
+                } else {
+                    if (typeof ResultadosMicroDB !== 'undefined') {
+                        if (ResultadosMicroDB.deleteAll) {
+                            await ResultadosMicroDB.deleteAll();
+                        } else if (ResultadosMicroDB.eliminarUltimo) {
+                            await ResultadosMicroDB.eliminarUltimo();
+                        }
+                    }
+                }
+            } catch (winErr) {
+                console.warn('Error al eliminar números ganadores del juego actual:', winErr);
+            }
+
+            // Cerrar el modal
             closeResetPlaysModal();
-            
-            // Limpiar las tablas y regenerar filas vacías
-            const tableBody = currentGameType === 'polla' ? 
-                document.getElementById('pollaTableBody') : 
-                document.getElementById('microTableBody');
-            
-            // Limpiar la tabla actual
+
+            // Limpiar las tablas y regenerar filas vacías en la UI para el modo actual
+            const tableBody = currentGameType === 'polla' ? document.getElementById('pollaTableBody') : document.getElementById('microTableBody');
             tableBody.innerHTML = '';
-            
-            // Reiniciar el array de jugadores
             if (currentGameType === 'polla') {
                 pollaPlayers = [];
-                generatePollaTableRows(); // Regenerar filas vacías
+                generatePollaTableRows();
+                clearSelections();
+                updatePollaTable();
             } else {
                 microPlayers = [];
-                generateMicroTableRows(); // Regenerar filas vacías
+                generateMicroTableRows();
+                clearSelections();
+                updateMicroTable();
             }
-            // Mostrar mensaje de éxito
+
+            // Mostrar mensaje de éxito y actualizar UI
             showToast('✅ ¡Todas las jugadas han sido reiniciadas exitosamente!', 'success');
-            
-            // Actualizar la interfaz
             updatePlaysCounter();
             updateCalculatedStats();
             updateDisplay();
-            
-            // Forzar actualización de la vista
-            requestAnimationFrame(() => {
-                // Actualizar la tabla actual
-                if (currentGameType === 'polla') {
-                    clearSelections();
-                    updatePollaTable();
-                } else {
-                    clearSelections();
-                    updateMicroTable();
-                }
-                
-                // Forzar un redibujado del navegador
-                setTimeout(() => {
-                    tableBody.style.display = 'none';
-                    tableBody.offsetHeight; // Trigger reflow
-                    tableBody.style.display = '';
-                    
-                    // Actualizar contadores nuevamente para asegurar consistencia
-                    updatePlaysCounter();
-                    updateCalculatedStats();
-                }, 50);
-            });
-        } else {
-            throw new Error(response?.error || 'Error al reiniciar las jugadas');
+        } catch (err) {
+            throw err;
         }
     } catch (error) {
         console.error('Error al reiniciar jugadas:', error);

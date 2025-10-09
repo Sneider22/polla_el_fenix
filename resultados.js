@@ -28,6 +28,31 @@ document.addEventListener('DOMContentLoaded', async function() {
             displayResults(); 
         });
     }
+
+    // Add copy functionality for Pago Móvil
+    const copyButton = document.getElementById('copyPagoMovil');
+    if (copyButton) {
+        copyButton.addEventListener('click', () => {
+            const telefono = document.getElementById('pagoMovilTelefono').innerText;
+            const cedula = document.getElementById('pagoMovilCedula').innerText;
+            const banco = document.getElementById('pagoMovilBanco').innerText;
+            const bancoNombre = 'BANESCO'; // Hardcoded as it was before
+
+            const textToCopy = `Pago Móvil\nTeléfono: ${telefono}\nCédula: ${cedula}\nBanco: ${banco} - ${bancoNombre}`;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Optional: Show a success message
+                const originalText = copyButton.innerText;
+                copyButton.innerText = '¡Copiado!';
+                setTimeout(() => {
+                    copyButton.innerText = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Error al copiar datos: ', err);
+                alert('Error al copiar los datos.');
+            });
+        });
+    }
 });
 
 function setupTabs() {
@@ -297,7 +322,7 @@ async function displaySummaryStats() {
     }
 
     // Actualizar título principal
-    document.querySelector('.results-title').textContent = currentGameType === 'polla' ? 'RESULTADOS POLLA EL FÉNIX' : 'RESULTADOS MICRO';
+    document.querySelector('.results-title').textContent = currentGameType === 'polla' ? '🐦‍🔥 RESULTADOS POLLA EL FÉNIX 🐦‍🔥' : '🐦‍🔥 RESULTADOS MICRO FÉNIX 🐦‍🔥';
 
     document.getElementById('totalPlayersResult').textContent = resultsData.length;
 

@@ -29,8 +29,7 @@
 <body class="bg-gradient-to-br from-background-1 to-background-2 max-w-[98vw] mx-auto min-h-screen mb-5">
     <div class="container mx-auto p-4">
         <div class="text-center mb-8">
-            <h1 class="results-title text-3xl sm:text-4xl font-bold text-[#a61c00] mb-2 drop-shadow-lg">RESULTADOS POLLA EL FÉNIX</h1>
-            <p class="results-subtitle text-[#a61c00]">Clasificación ordenada por número de aciertos</p>
+            <h1 class="results-title text-3xl sm:text-4xl font-bold text-[#a61c00] mb-2 drop-shadow-lg">🐦‍🔥 RESULTADOS POLLA EL FÉNIX 🐦‍🔥</h1>
         </div>
 
         <div class="flex justify-center mb-8 bg-white/20 rounded-full p-1 max-w-sm mx-auto">
@@ -41,62 +40,68 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 justify-center items-center">
             <!-- Columna Izquierda: Números Ganadores y Estadísticas -->
             <div class="lg:col-span-1 space-y-6">
-                <div class="bg-white rounded-lg shadow-lg p-6">
-                    <h2 class="text-xl font-bold text-gray-800 text-center mb-4">NÚMEROS GANADORES</h2>
+                <div class="bg-white rounded-lg shadow-lg p-4">
+                    <h2 class="text-lg font-bold text-gray-800 text-center mb-4">Resultados del día</h2>
                     <div class="grid grid-cols-6 sm:grid-cols-8 gap-2 justify-center" id="winningNumbersGrid">
                         <!-- Los números ganadores se cargarán aquí -->
                     </div>
                 </div>
 
-                <section class="bg-white rounded-lg shadow-lg p-6">
+                <section class="bg-white rounded-lg shadow-lg p-4">
                     <article class="grid grid-cols-2 gap-4">
-                        <div class="text-center bg-gray-100 p-3 rounded-lg">
-                            <div class="text-2xl sm:text-3xl font-bold text-fenix-blue" id="totalPlayersResult">0</div>
+                        <div class="text-center bg-gray-100 p-2 rounded-lg">
+                            <div class="text-xl sm:text-2xl font-bold text-fenix-blue" id="totalPlayersResult">0</div>
                             <div class="text-sm font-semibold text-gray-600">Total Jugadores</div>
                         </div>
-                        <div class="text-center bg-gray-100 p-3 rounded-lg">
-                            <div class="text-2xl sm:text-3xl font-bold text-fenix-green" id="totalWinnersResult">0</div>
+                        <div class="text-center bg-gray-100 p-2 rounded-lg">
+                            <div class="text-xl sm:text-2xl font-bold text-fenix-green" id="totalWinnersResult">0</div>
                             <div class="text-sm font-semibold text-gray-600" id="winnerLabel">Ganadores</div>
                         </div>
-                        <div class="text-center bg-gray-100 p-3 rounded-lg">
-                            <div class="text-2xl sm:text-3xl font-bold text-fenix-orange" id="totalPrizeResult">0</div>
+                        <div class="text-center bg-gray-100 p-2 rounded-lg">
+                            <div class="text-xl sm:text-2xl font-bold text-fenix-orange" id="totalPrizeResult">0</div>
                             <div class="text-sm font-semibold text-gray-600">Premio Total</div>
                         </div>
-                        <div class="text-center bg-gray-100 p-3 rounded-lg">
-                            <div class="text-2xl sm:text-3xl font-bold text-fenix-purple" id="prizePerWinnerResult">0</div>
+                        <div class="text-center bg-gray-100 p-2 rounded-lg">
+                            <div class="text-xl sm:text-2xl font-bold text-fenix-purple" id="prizePerWinnerResult">0</div>
                             <div class="text-sm font-semibold text-gray-600">Premio por Ganador</div>
                         </div>
+            </article>
+                </section>
             </div>
             <div class="flex-shrink-0 md:mr-8">
                 <img src="Logo Fenix.png" alt="Logo Polla El Fénix" class="w-full h-auto">
             </div>
-            <div class="w-full bg-white rounded-lg shadow-md p-6 mb-4">
+            <div class="w-full  rounded-lg shadow-md p-4 mb-4">
                 <div class="flex flex-col md:flex-row items-center justify-center gap-8">
                     
                     
                     <!-- Columna para Valor y Pago Móvil -->
-                    <div class="flex flex-col items-center md:items-start space-y-6">
-                        <!-- Valor -->
-                        <div class="bg-yellow-400 text-black font-bold text-2xl px-8 py-4 rounded-lg shadow-md w-full text-center">
+                    <div class="flex flex-col items-center md:items-start space-y-4">
+                        
+                        <!-- Pago Móvil -->
+                        <div class="bg-white border-2 border-blue-100 rounded-lg p-4 shadow-sm w-full max-w-xs">
+                            <div class="text-center font-extrabold text-blue-800 text-lg mb-3 tracking-wide">PAGO MÓVIL<!-- Valor -->
+                            </div>
+                        <div class="bg-yellow-400 text-black font-bold text-lg px-4 py-1 rounded-lg shadow-md w-full text-center">
                             VALOR: 50 BS
                         </div>
-                        <!-- Pago Móvil -->
-                        <div class="bg-white border-2 border-blue-100 rounded-lg p-5 shadow-sm w-full max-w-xs">
-                            <div class="text-center font-extrabold text-blue-800 text-xl mb-4 tracking-wide">PAGO MÓVIL</div>
-                            <div class="space-y-3">
-                                <div class="bg-blue-50 p-3 rounded-lg">
-                                    <div class="text-sm font-medium text-blue-600">TELÉFONO</div>
-                                    <div class="font-bold text-lg text-blue-900">0424-303-5092</div>
+                            <div id="pagoMovilData" class="grid grid-cols-2 gap-2 mb-3">
+                                <div class="bg-blue-50 p-2 rounded-lg col-span-2">
+                                    <div class="text-xs font-medium text-blue-600">TELÉFONO</div>
+                                    <div class="font-bold text-sm text-blue-900" id="pagoMovilTelefono">0424-303-5092</div>
                                 </div>
-                                <div class="bg-blue-50 p-3 rounded-lg">
-                                    <div class="text-sm font-medium text-blue-600">CÉDULA</div>
-                                    <div class="font-bold text-lg text-blue-900">V-27.863.570</div>
+                                <div class="bg-blue-50 p-2 rounded-lg">
+                                    <div class="text-xs font-medium text-blue-600">CÉDULA</div>
+                                    <div class="font-bold text-sm text-blue-900" id="pagoMovilCedula">V-27.863.570</div>
                                 </div>
-                                <div class="bg-blue-50 p-3 rounded-lg">
-                                    <div class="text-sm font-medium text-blue-600">BANCO</div>
-                                    <div class="font-bold text-lg text-blue-900">0134 - BANESCO</div>
+                                <div class="bg-blue-50 p-2 rounded-lg">
+                                    <div class="text-xs font-medium text-blue-600">BANCO</div>
+                                    <div class="font-bold text-sm text-blue-900" id="pagoMovilBanco">0134</div>
                                 </div>
                             </div>
+                            <button id="copyPagoMovil" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                Copiar Datos
+                            </button>
                         </div>
                     </div>
                 </div>
