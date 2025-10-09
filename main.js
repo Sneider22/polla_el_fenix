@@ -43,25 +43,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     updateDisplay();
     
-    // Botón para limpiar números ganadores
-    const clearBtn = document.getElementById('clearWinningNumbers');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', async () => {
-            if (winningNumbers.size === 0) return; // No hay nada que limpiar
-            if (!confirm(`¿Estás seguro de que quieres limpiar TODOS los números ganadores para ${currentGameType.toUpperCase()}?`)) return;
-
-            // Limpiar UI
-            document.querySelectorAll('.number-cell.selected').forEach(cell => {
-                cell.classList.remove('selected', 'ring-yellow-400', 'transform', 'scale-110', 'bg-yellow-300', 'text-black');
-            });
-
-            // Limpiar en memoria
-            winningNumbers.clear();
-
-            // Actualizar en la base de datos
-            await updateWinningNumbersInDB();
-        });
-    }
+    // Nota: el botón de limpiar números ganadores abre un modal (openClearSelectionModal)
+    // y la confirmación se maneja en confirmClearSelection(). No se añade aquí un
+    // handler directo para evitar comportamientos duplicados.
 });
 
 // Helper para obtener el cuerpo de la tabla actual
@@ -668,16 +652,47 @@ async function resetAll() {
         const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
         const jugadasDB = currentGameType === 'polla' ? JugadasPollaDB : JugadasMicroDB;
         try {
-            // Borrar SOLO las jugadas
+            // Borrar las jugadas del juego actual
             const jugadasRes = await jugadasDB.deleteAll();
             if (!jugadasRes.success) {
                 throw new Error(jugadasRes.error || `Error borrando jugadas de ${gameName}`);
             }
 
-            // No se tocan números ganadores ni pote
-            // Refrescar UI
+            // Poner el pote a cero para el JUEGO ACTUAL (no eliminar el registro)
+            if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
+                const zeros = { lunes: 0, martes: 0, miércoles: 0, jueves: 0, viernes: 0, sábado: 0, domingo: 0, garantizado: 0, acumulado: 0 };
+                const poteRes = await PotesDB.actualizar(currentGameType, zeros);
+                if (!poteRes.success) {
+                    console.warn(`No se pudo poner a cero el pote de ${gameName}:`, poteRes.error);
+                }
+            }
+
+            // Borrar números ganadores: para POLLA eliminamos el último registro (histórico),
+            // para MICRO borramos TODOS los resultados de micro
+            try {
+                if (currentGameType === 'polla') {
+                    if (typeof ResultadosNumerosDB !== 'undefined' && ResultadosNumerosDB.eliminarUltimo) await ResultadosNumerosDB.eliminarUltimo();
+                } else {
+                    if (typeof ResultadosMicroDB !== 'undefined') {
+                        if (ResultadosMicroDB.deleteAll) {
+                            await ResultadosMicroDB.deleteAll();
+                        } else if (ResultadosMicroDB.eliminarUltimo) {
+                            // Fallback: eliminar último si deleteAll no está disponible
+                            await ResultadosMicroDB.eliminarUltimo();
+                        }
+                    }
+                }
+            } catch (winErr) {
+                console.warn('Error al eliminar números ganadores del juego actual:', winErr);
+            }
+
+            // Refrescar UI: recargar jugadas y números ganadores y valores del pote para el modo actual
             await loadTicketsFromSupabase();
-            showToast(`Todas las jugadas de la ${gameName} han sido borradas.`, 'success');
+            await loadWinnersFromSupabase();
+            // Recargar valores de pote para que los inputs reflejen el estado (vacío o 0)
+            await loadPotsFromSupabase();
+
+            showToast(`Jugadas, pote y números ganadores de la ${gameName} han sido eliminados.`, 'success');
         } catch (error) {
             console.error('Error al borrar jugadas:', error);
             showToast('Error al borrar las jugadas: ' + (error.message || error), 'error');
@@ -1422,21 +1437,28 @@ function updateStatDisplay(statType, value) {
 
 // Función para actualizar la tabla correcta según el tipo de juego
 function updatePlayersTable() {
-    if (currentGameType === 'polla') {
-        updatePollaTable();
-    } else {
-        updateMicroTable();
-    }
+    // Usar requestAnimationFrame para agrupar actualizaciones de la UI
+    requestAnimationFrame(() => {
+        if (currentGameType === 'polla') {
+            updatePollaTable();
+        } else {
+            updateMicroTable();
+        }
+    });
 }
 
 // Función para actualizar tabla Polla
 function updatePollaTable() {
     const tableBody = document.getElementById('pollaTableBody');
-    const rows = tableBody.querySelectorAll('tr');
+    if (!tableBody) return;
     
-    // Calcular aciertos para cada jugador de polla
-    pollaPlayers.forEach(player => {
-        player.hits = 0;
+    // Usar un fragmento de documento para actualizaciones por lotes
+    const fragment = document.createDocumentFragment();
+    const rows = Array.from(tableBody.querySelectorAll('tr'));
+    
+    // Primero, calcular todos los aciertos sin tocar el DOM
+    const playersWithHits = pollaPlayers.map(player => {
+        let hits = 0;
         player.numbers.forEach(number => {
             if (number && winningNumbers.has(number)) {
                 player.hits++;
@@ -1479,11 +1501,15 @@ function updatePollaTable() {
 // Función para actualizar tabla Micro
 function updateMicroTable() {
     const tableBody = document.getElementById('microTableBody');
-    const rows = tableBody.querySelectorAll('tr');
+    if (!tableBody) return;
     
-    // Calcular aciertos para cada jugador de micro
-    microPlayers.forEach(player => {
-        player.hits = 0;
+    // Usar un fragmento de documento para actualizaciones por lotes
+    const fragment = document.createDocumentFragment();
+    const rows = Array.from(tableBody.querySelectorAll('tr'));
+    
+    // Primero, calcular todos los aciertos sin tocar el DOM
+    const playersWithHits = microPlayers.map(player => {
+        let hits = 0;
         player.numbers.forEach(number => { // 'number' puede ser un string vacío si la celda está vacía
             if (winningNumbers.has(number)) {
                 player.hits++;
@@ -1644,20 +1670,93 @@ function reorderTableRows() {
 
 // Función para limpiar selecciones
 async function clearSelections() {
-    // Limpiar UI
-    document.querySelectorAll('.number-cell').forEach(cell => {
-        cell.classList.remove('selected', 'ring-yellow-400', 'transform', 'scale-110', 'bg-yellow-300', 'text-black');
+    return new Promise((resolve) => {
+        try {
+            // 1. Limpiar estilos de las celdas seleccionadas
+            const selectedCells = document.querySelectorAll('.number-cell.selected, .number-cell.bg-yellow-300');
+            
+            // 2. Procesar en lotes para mejor rendimiento
+            const batchSize = 50;
+            const processBatch = (start) => {
+                const end = Math.min(start + batchSize, selectedCells.length);
+                
+                requestAnimationFrame(() => {
+                    // Eliminar clases de todas las celdas en este lote
+                    for (let i = start; i < end; i++) {
+                        const cell = selectedCells[i];
+                        if (cell) {
+                            cell.classList.remove(
+                                'selected', 
+                                'ring-yellow-400', 
+                                'transform', 
+                                'scale-110', 
+                                'bg-yellow-300', 
+                                'text-black'
+                            );
+                        }
+                    }
+                    
+                    // Procesar siguiente lote si es necesario
+                    if (end < selectedCells.length) {
+                        processBatch(end);
+                    } else {
+                        // 3. Limpiar en memoria
+                        winningNumbers.clear();
+                        
+                        // 4. Actualizar la base de datos
+                        updateWinningNumbersInDB()
+                            .then(() => {
+                                // 5. Actualizar todas las tablas
+                                updatePollaTable();
+                                updateMicroTable();
+                                updateCalculatedStats();
+                                
+                                // 6. Forzar actualización de la UI
+                                requestAnimationFrame(() => {
+                                    document.querySelectorAll('tr').forEach(row => {
+                                        const hitsCell = row.querySelector('[data-hits]');
+                                        if (hitsCell) {
+                                            hitsCell.textContent = '0';
+                                            hitsCell.className = '';
+                                            hitsCell.classList.add('p-2', 'font-bold');
+                                        }
+                                    });
+                                    
+                                    // Resolver la promesa cuando todo esté listo
+                                    resolve();
+                                });
+                            })
+                            .catch(error => {
+                                console.error('Error al limpiar números ganadores:', error);
+                                resolve(); // Asegurarse de que la promesa se resuelva incluso si hay error
+                            });
+                    }
+                });
+            };
+            
+            // Iniciar el procesamiento
+            if (selectedCells.length > 0) {
+                processBatch(0);
+            } else {
+                // Si no hay celdas seleccionadas, solo limpiar en memoria y actualizar
+                winningNumbers.clear();
+                updateWinningNumbersInDB()
+                    .then(() => {
+                        updatePollaTable();
+                        updateMicroTable();
+                        updateCalculatedStats();
+                        resolve();
+                    })
+                    .catch(error => {
+                        console.error('Error al actualizar la base de datos:', error);
+                        resolve();
+                    });
+            }
+        } catch (error) {
+            console.error('Error en clearSelections:', error);
+            resolve(); // Asegurarse de que la promesa siempre se resuelva
+        }
     });
-    
-    // Limpiar en memoria
-    winningNumbers.clear();
-    
-    // Actualizar en la base de datos
-    await updateWinningNumbersInDB();
-    
-    // Actualizar la tabla de jugadores
-    updatePlayersTable();
-    console.log('Números ganadores limpiados correctamente');
 }
 
 // Función para actualizar display con debounce
@@ -1673,6 +1772,9 @@ const updateDisplay = debounce(() => {
 
 // Abrir modal de reiniciar jugadas
 function openResetPlaysModal() {
+    const modeName = currentGameType === 'polla' ? 'POLLA' : 'MICRO';
+    const msgEl = document.getElementById('confirmResetModalIndexMsg');
+    if (msgEl) msgEl.textContent = `Esto pondrá el pote semanal a cero (lunes..domingo, garantizado y acumulado) y eliminará las jugadas y los números ganadores SOLO del modo actual: ${modeName}. No afectará al otro modo.`;
     document.getElementById('resetPlaysModal').classList.remove('hidden');
 }
 
@@ -1683,6 +1785,9 @@ function closeClearPotModal() {
 
 // Mostrar modal de limpiar pote
 function openClearPotModal() {
+    const modeName = currentGameType === 'polla' ? 'POLLA' : 'MICRO';
+    const msgEl = document.getElementById('clearPotModalMsg');
+    if (msgEl) msgEl.textContent = `¿Deseas poner a cero el pote semanal de ${modeName}? Esta acción no se puede deshacer.`;
     document.getElementById('clearPotModal').classList.remove('hidden');
 }
 
@@ -1714,6 +1819,9 @@ function closeClearSelectionModal() {
 
 // Mostrar modal de limpiar selección
 function openClearSelectionModal() {
+    const modeName = currentGameType === 'polla' ? 'POLLA' : 'MICRO';
+    const msgEl = document.getElementById('clearSelectionModalMsg');
+    if (msgEl) msgEl.textContent = `¿Deseas limpiar la selección de números ganadores para ${modeName}? Esta acción no se puede deshacer.`;
     document.getElementById('clearSelectionModal').classList.remove('hidden');
 }
 
@@ -1722,6 +1830,24 @@ async function confirmClearSelection() {
     try {
         closeClearSelectionModal();
         await clearSelections();
+        
+        // Si estamos en modo micro, también limpiamos los números ganadores
+        if (currentGameType === 'micro') {
+            // Limpiar la interfaz de usuario
+            document.querySelectorAll('.number-cell').forEach(cell => {
+                cell.classList.remove('selected', 'ring-yellow-400', 'transform', 'scale-110', 'bg-yellow-300', 'text-black');
+            });
+            
+            // Limpiar en memoria
+            winningNumbers.clear();
+            
+            // Actualizar en la base de datos
+            await updateWinningNumbersInDB();
+            
+            // Actualizar la tabla de jugadores
+            updatePlayersTable();
+        }
+        
         showToast('✅ Selección limpiada exitosamente', 'success');
     } catch (error) {
         console.error('Error al limpiar la selección:', error);
@@ -1767,7 +1893,6 @@ async function confirmResetPlays() {
                 microPlayers = [];
                 generateMicroTableRows(); // Regenerar filas vacías
             }
-            
             // Mostrar mensaje de éxito
             showToast('✅ ¡Todas las jugadas han sido reiniciadas exitosamente!', 'success');
             
@@ -1780,8 +1905,10 @@ async function confirmResetPlays() {
             requestAnimationFrame(() => {
                 // Actualizar la tabla actual
                 if (currentGameType === 'polla') {
+                    clearSelections();
                     updatePollaTable();
                 } else {
+                    clearSelections();
                     updateMicroTable();
                 }
                 

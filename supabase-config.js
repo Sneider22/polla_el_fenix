@@ -469,6 +469,21 @@ const PotesDB = {
             return { success: false, error: error.message };
         }
     }
+    ,
+    // Eliminar el pote para un tipo de juego específico
+    async eliminar(tipoJuego) {
+        try {
+            const { error } = await supabaseClient
+                .from('potes')
+                .delete()
+                .eq('tipo_juego', tipoJuego);
+            if (error) throw error;
+            return { success: true };
+        } catch (error) {
+            console.error(`Error al eliminar pote para ${tipoJuego}:`, error);
+            return { success: false, error: error.message };
+        }
+    }
 };
 
 // Función para resetear todos los datos del juego llamando a un RPC

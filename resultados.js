@@ -399,7 +399,7 @@ function displayResultsTable(dataToDisplay) {
         const hitsCell = document.createElement('td');
         hitsCell.className = 'px-6 py-4 text-center';
         hitsCell.className = 'px-2 sm:px-6 py-4 text-center';
-        hitsCell.innerHTML = `<span class="bg-blue-600 text-white text-sm font-bold px-3 py-1 rounded-full">${player.hits}</span>`;
+        hitsCell.innerHTML = `<span class="bg-pink-600 text-white text-sm font-bold px-3 py-1 rounded-full">${player.hits}</span>`;
 
         // 5. Premio
         const prizeCell = document.createElement('td');
