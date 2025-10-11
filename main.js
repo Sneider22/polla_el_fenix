@@ -28,14 +28,43 @@ const PERF_CONFIG = {
 // Celda donde se hizo click por última vez (punto de inicio para pegado desde Excel)
 let lastClickedCell = null;
 let dailyValues = {
-    polla: { lunes: 0, martes: 0, miércoles: 0, jueves: 0, viernes: 0, sábado: 0, domingo: 0, garantizado: 0, acumulado: 0 },
-    micro: { lunes: 0, martes: 0, miércoles: 0, jueves: 0, viernes: 0, sábado: 0, domingo: 0, garantizado: 0, acumulado: 0 }
+    polla: { lunes: 0, martes: 0, miércoles: 0, jueves: 0, viernes: 0, sábado: 0, domingo: 0, garantizado: 0, acumulado: 0, precioJugada: 50, poteSemanal: 0 },
+    micro: { lunes: 0, martes: 0, miércoles: 0, jueves: 0, viernes: 0, sábado: 0, domingo: 0, garantizado: 0, acumulado: 0, precioJugada: 50, poteSemanal: 0 }
 };
 let currentGameType = 'polla'; // 'polla' o 'micro'
 
 // Control global para mostrar toasts de éxito/informativos.
 // Poner a false para desactivar notificaciones de carga y reducir trabajo en el DOM.
 const SHOW_SUCCESS_TOASTS = false;
+
+/**
+ * Muestra una notificación toast en la pantalla.
+ * @param {string} message - El mensaje a mostrar.
+ * @param {'success'|'error'|'info'} type - El tipo de notificación.
+ */
+function showToast(message, type = 'info') {
+    if (!SHOW_SUCCESS_TOASTS && type === 'success') return;
+
+    const toast = document.createElement('div');
+    const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500'
+    };
+    toast.className = `fixed bottom-5 right-5 ${colors[type]} text-white py-2 px-4 rounded-lg shadow-lg z-[10000] transition-opacity duration-300`;
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    // Fade in
+    setTimeout(() => toast.style.opacity = '1', 10);
+
+    // Fade out and remove
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
@@ -58,7 +87,6 @@ function getCurrentTableBody() {
 
 // Función de inicialización
 async function initializeGame() {
-    console.log('Polla El Fenix inicializada');
 
     // Inicializar Supabase PRIMERO para que el cliente esté disponible
     if (typeof initializeSupabase === 'function') {
@@ -129,6 +157,9 @@ async function initializeGame() {
     
     // Marcar día actual
     highlightCurrentDay();
+
+    // Forzar una actualización inicial de la configuración para mostrar valores como el precio de la jugada
+    updateGameConfiguration();
 }
 
 async function loadPotsFromSupabase() {
@@ -145,6 +176,23 @@ async function loadPotsFromSupabase() {
 
     // Update UI with the loaded values for the current game
     switchGameModeValues(currentGameType);
+    
+    // Solo aplicar el valor por defecto del día actual si no existe en la BD
+    const weekdayMap = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const todayName = weekdayMap[new Date().getDay()];
+    const currentValues = dailyValues[currentGameType];
+    
+    // Solo aplicar el valor por defecto si el valor es null/undefined (no existe en BD)
+    // No aplicar si es 0, porque 0 puede ser un valor intencional del usuario
+    if (currentValues[todayName] === null || currentValues[todayName] === undefined) {
+        currentValues[todayName] = -143;
+        // Guardar en la base de datos solo la primera vez
+        if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
+            PotesDB.actualizar(currentGameType, currentValues).catch(err => {
+                console.error("Error al guardar valor por defecto del día actual:", err);
+            });
+        }
+    }
 }
 
 // Función para generar filas iniciales de la tabla
@@ -230,6 +278,12 @@ async function handleTablePaste(e) {
 
     // Evitar que el navegador pegue el texto crudo en el input actual
     e.preventDefault();
+
+    // Mostrar overlay de carga
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingOverlayText = document.getElementById('loadingOverlayText');
+    if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+    if (loadingOverlayText) loadingOverlayText.textContent = 'Procesando jugadas...';
 
     // Determinar la fila y celda de inicio
     let startCell = lastClickedCell;
@@ -371,6 +425,11 @@ async function handleTablePaste(e) {
         }
     }
 
+    // Ocultar overlay de carga
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+    }
+
     showToast(`Pegadas ${pastedCount} fila(s) desde el portapapeles`, 'success');
 }
 
@@ -408,18 +467,41 @@ function setupEventListeners() {
     if (acumuladoInput) {
         acumuladoInput.addEventListener('input', () => updateAdditionalPrizes());
     }
+    
+    // Event listeners para configuración de juego
+    const precioJugadaInput = document.getElementById('precioJugadaInput');
+    if (precioJugadaInput) {
+        precioJugadaInput.addEventListener('input', () => updateGameConfiguration());
+    }
+    const poteSemanalInput = document.getElementById('poteSemanalInput');
+    if (poteSemanalInput) {
+        poteSemanalInput.addEventListener('input', () => updateGameConfiguration());
+    }
 }
 
 function switchGameModeValues(gameType) {
     const valuesToLoad = dailyValues[gameType];
     if (!valuesToLoad) return;
 
+    // Obtener el día actual
+    const weekdayMap = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const todayName = weekdayMap[new Date().getDay()];
+
     // Day inputs
     const dayInputs = document.querySelectorAll('input[data-day]');
     dayInputs.forEach(input => {
         const day = input.dataset.day;
-        const value = valuesToLoad[day] || 0;
-        input.value = value > 0 ? value : '';
+        let value = valuesToLoad[day] || 0;
+        
+        // Solo aplicar el valor por defecto (-143) si es el día actual y no hay valor guardado
+        // Y solo si el valor es null/undefined (no 0, porque 0 puede ser un valor intencional del usuario)
+        if (day === todayName && (valuesToLoad[day] === null || valuesToLoad[day] === undefined)) {
+            value = -143;
+            // Guardar este valor por defecto solo la primera vez
+            valuesToLoad[day] = value;
+        }
+        
+        input.value = value !== 0 ? value : '';
     });
 
     // Additional prize inputs
@@ -433,6 +515,28 @@ function switchGameModeValues(gameType) {
     if (acumuladoInput) {
         const acumulado = valuesToLoad.acumulado || 0;
         acumuladoInput.value = acumulado > 0 ? acumulado : '';
+    }
+    
+    // Game configuration inputs
+    const precioJugadaInput = document.getElementById('precioJugadaInput');
+    const poteSemanalInput = document.getElementById('poteSemanalInput');
+    
+    if (precioJugadaInput) {
+        const precioJugada = valuesToLoad.precioJugada || 50;
+        precioJugadaInput.value = precioJugada;
+    }
+    if (poteSemanalInput) {
+        let poteSemanal = valuesToLoad.poteSemanal || 0;
+        
+        // Solo sincronizar con el pote diario si el pote semanal no ha sido configurado por el usuario
+        // Si el usuario ha puesto 0 intencionalmente, respetar esa decisión
+        if (poteSemanal === 0 && (valuesToLoad.poteSemanal === null || valuesToLoad.poteSemanal === undefined)) {
+            poteSemanal = valuesToLoad[todayName] || 0;
+            // Actualizar el valor en memoria solo si no hay configuración previa
+            valuesToLoad.poteSemanal = poteSemanal;
+        }
+        
+        poteSemanalInput.value = poteSemanal !== 0 ? poteSemanal : '';
     }
 
     // After loading new values, update all calculations
@@ -531,12 +635,17 @@ function setupDayValueCells() {
 }
 
 function debounce(func, delay) {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(func, delay);
+    let timeoutId;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(context, args), delay);
+    };
 }
 
-// Función para actualizar el total del pote
+// Función para actualizar el total del pote (ahora solo para mostrar, no para cálculo)
 function updateTotalPot() {
+    // Los días ya no se suman para el cálculo del premio, solo se guardan para referencia
     const dayInputs = document.querySelectorAll('input[data-day]');
     let total = 0;
     const currentDayValues = dailyValues[currentGameType];
@@ -552,13 +661,15 @@ function updateTotalPot() {
         }
     });
     
+    // Mostrar el total de los días (solo para referencia visual)
     document.getElementById('totalPotValue').textContent = total;
+    
+    // El cálculo real del premio ahora usa el pote semanal del usuario y el pote diario fijo (-143)
     updateCalculatedStats();
 
     // Guardar en la base de datos con debounce
     debounce(() => {
         if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
-            console.log(`Guardando pote para ${currentGameType}...`);
             PotesDB.actualizar(currentGameType, currentDayValues).catch(err => {
                 console.error("Error al guardar el pote en la BD:", err);
             });
@@ -583,7 +694,6 @@ function updateAdditionalPrizes() {
     // Save to DB using the same debounce logic as the pot
     debounce(() => {
         if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
-            console.log(`Guardando premios adicionales para ${currentGameType}...`);
             PotesDB.actualizar(currentGameType, dailyValues[currentGameType]).catch(err => {
                 console.error("Error al guardar premios adicionales en la BD:", err);
             });
@@ -591,38 +701,44 @@ function updateAdditionalPrizes() {
     }, 1000);
 }
 
-// Función para limpiar solo el pote semanal
-function clearCurrentPot() {
-    const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
-    if (!confirm(`¿Estás seguro de que quieres limpiar el pote semanal para la ${gameName}? Esto pondrá todos los valores de los días en cero.`)) {
-        return;
-    }
-
-    try {
-        console.log(`Limpiando pote para ${gameName}...`);
+// Función para actualizar configuración de juego
+function updateGameConfiguration() {
+    const precioJugada = parseInt(document.getElementById('precioJugadaInput').value) || 50;
+    let poteSemanal = parseInt(document.getElementById('poteSemanalInput').value) || 0;
+    
+    const currentValues = dailyValues[currentGameType];
+    
+    // Si el pote semanal está vacío o no se ha configurado, sincronizarlo con el valor del día actual.
+    if (poteSemanal === 0) {
+        const weekdayMap = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+        const todayName = weekdayMap[new Date().getDay()];
+        poteSemanal = currentValues[todayName] || 0;
         
-        // 1. Resetear los valores de los días en memoria para el modo actual
-        const currentPotValues = dailyValues[currentGameType];
-        if (currentPotValues) {
-            ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'].forEach(day => {
-                currentPotValues[day] = 0;
+        const poteSemanalInput = document.getElementById('poteSemanalInput');
+        if (poteSemanalInput) poteSemanalInput.value = poteSemanal !== 0 ? poteSemanal : '';
+    }
+    
+    if (currentValues) {
+        currentValues.precioJugada = precioJugada;
+        currentValues.poteSemanal = poteSemanal;
+    }
+    // Actualizar el display del valor de la jugada
+    const precioJugadaValueEl = document.getElementById('precioJugadaValue');
+    if (precioJugadaValueEl) precioJugadaValueEl.textContent = `${precioJugada} BS`;
+
+    // Recalculate everything that depends on these values
+    updateCalculatedStats();
+
+    // Save to DB using the same debounce logic as the pot
+    debounce(() => {
+        if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
+            PotesDB.actualizar(currentGameType, dailyValues[currentGameType]).catch(err => {
+                console.error("Error al guardar configuración de juego en la BD:", err);
             });
         }
-
-        // 2. Limpiar los inputs de los días en la UI
-        document.querySelectorAll('input[data-day]').forEach(input => {
-            input.value = '';
-        });
-
-        // 3. Forzar el recálculo y guardado en la BD
-        updateTotalPot();
-
-        showToast(`¡El pote semanal de la ${gameName} ha sido limpiado exitosamente!`);
-    } catch (error) {
-        console.error('Error al limpiar el pote:', error);
-        alert('Error al limpiar el pote: ' + error.message);
-    }
+    }, 1000);
 }
+
 
 // Función para resetear toda la app
 async function resetAll() {
@@ -660,7 +776,7 @@ async function resetAll() {
 
             // Poner el pote a cero para el JUEGO ACTUAL (no eliminar el registro)
             if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
-                const zeros = { lunes: 0, martes: 0, miércoles: 0, jueves: 0, viernes: 0, sábado: 0, domingo: 0, garantizado: 0, acumulado: 0 };
+                const zeros = { lunes: 0, martes: 0, miércoles: 0, jueves: 0, viernes: 0, sábado: 0, domingo: 0, garantizado: 0, acumulado: 0, precioJugada: 50, poteSemanal: 0 };
                 const poteRes = await PotesDB.actualizar(currentGameType, zeros);
                 if (!poteRes.success) {
                     console.warn(`No se pudo poner a cero el pote de ${gameName}:`, poteRes.error);
@@ -1361,14 +1477,14 @@ function updatePlaysCounter() {
 // Función para actualizar estadísticas calculadas
 function updateCalculatedStats() {
     // 1. Obtener valores base de la UI y memoria
-    const poteSemanal = dailyValues[currentGameType].lunes + dailyValues[currentGameType].martes + dailyValues[currentGameType].miércoles + dailyValues[currentGameType].jueves + dailyValues[currentGameType].viernes + dailyValues[currentGameType].sábado + dailyValues[currentGameType].domingo || 0;
+    const poteSemanalUsuario = dailyValues[currentGameType].poteSemanal || 0;
     
     // 2. Obtener datos de jugadores
     const currentPlayers = currentGameType === 'polla' ? pollaPlayers : microPlayers;
     const completePlayers = currentPlayers.filter(p => p.isComplete);
 
-    // 3. Calcular recaudación
-    const precioJugada = 50;
+    // 3. Calcular recaudación usando el precio configurable
+    const precioJugada = dailyValues[currentGameType].precioJugada || 50;
     const gratisCount = completePlayers.filter(p => p.gratis === true).length;
     const payingPlayersCount = completePlayers.length - gratisCount;
     const premioTotal = payingPlayersCount * precioJugada;
@@ -1376,8 +1492,10 @@ function updateCalculatedStats() {
 
     const garantizado = dailyValues[currentGameType].garantizado || 0;
     const acumulado = dailyValues[currentGameType].acumulado || 0;
+    
     // 4. Calcular el pozo total para el premio mayor
-    const pozoTotal = recaudadoParaPremio - poteSemanal + acumulado;
+    // El pote semanal del usuario ya incluye el pote diario (-143), por lo que solo se suma
+    const pozoTotal = recaudadoParaPremio + poteSemanalUsuario + acumulado;
 
     // 5. Identificar ganadores usando umbral fijo (6 para polla, 3 para micro)
     const thresholdHits = currentGameType === 'polla' ? 6 : 3;
@@ -1402,7 +1520,7 @@ function updateCalculatedStats() {
 
     // 9. Actualizar la interfaz
     updateStatDisplay('menos20', recaudadoParaPremio); // Esto es "Aporte a Premio (80%)"
-    updateStatDisplay('pote', poteSemanal);
+    updateStatDisplay('pote', poteSemanalUsuario);
     updateStatDisplay('plays', completePlayers.length);
     updateStatDisplay('gratis', gratisCount);
     updateStatDisplay('garantizado', garantizado);
@@ -1457,13 +1575,14 @@ function updatePollaTable() {
     const rows = Array.from(tableBody.querySelectorAll('tr'));
     
     // Primero, calcular todos los aciertos sin tocar el DOM
-    const playersWithHits = pollaPlayers.map(player => {
+    pollaPlayers.forEach(player => {
         let hits = 0;
         player.numbers.forEach(number => {
             if (number && winningNumbers.has(number)) {
-                player.hits++;
+                hits++;
             }
         });
+        player.hits = hits; // Asignar el valor calculado, no incrementar
     });
     
     // Actualizar filas existentes
@@ -1508,13 +1627,14 @@ function updateMicroTable() {
     const rows = Array.from(tableBody.querySelectorAll('tr'));
     
     // Primero, calcular todos los aciertos sin tocar el DOM
-    const playersWithHits = microPlayers.map(player => {
+    microPlayers.forEach(player => {
         let hits = 0;
         player.numbers.forEach(number => { // 'number' puede ser un string vacío si la celda está vacía
-            if (winningNumbers.has(number)) {
-                player.hits++;
+            if (number && winningNumbers.has(number)) {
+                hits++;
             }
         });
+        player.hits = hits; // Asignar el valor calculado, no incrementar
     });
     
     // Actualizar filas existentes
@@ -1794,18 +1914,44 @@ function openClearPotModal() {
 // Confirmar limpiar pote
 async function confirmClearPot() {
     try {
-        // Aquí iría la lógica para limpiar el pote
-        // Por ahora, solo cerramos el modal y mostramos un mensaje
-        closeClearPotModal();
-        showToast('✅ Pote limpiado exitosamente', 'success');
+        const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
         
-        // Actualizar la interfaz según sea necesario
-        document.getElementById('totalPotValue').textContent = '0';
-        
-        // Limpiar los campos de días
+        // 1. Resetear los valores de los días en memoria para el modo actual
+        const currentPotValues = dailyValues[currentGameType];
+        if (currentPotValues) {
+            ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'].forEach(day => {
+                currentPotValues[day] = 0;
+            });
+        }
+
+        // 2. Limpiar los inputs de los días en la UI
         document.querySelectorAll('input[data-day]').forEach(input => {
             input.value = '';
         });
+
+        // 3. Limpiar también el pote semanal
+        const poteSemanalInput = document.getElementById('poteSemanalInput');
+        if (poteSemanalInput) {
+            poteSemanalInput.value = '';
+            currentPotValues.poteSemanal = 0;
+        }
+
+        // 4. Guardar en la base de datos
+        if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
+            const result = await PotesDB.actualizar(currentGameType, currentPotValues);
+            if (!result.success) {
+                console.warn(`No se pudo limpiar el pote de ${gameName}:`, result.error);
+            }
+        }
+
+        // 5. Forzar el recálculo
+        updateTotalPot();
+        updateCalculatedStats();
+
+        // 6. Cerrar modal y mostrar mensaje
+        closeClearPotModal();
+        showToast(`¡El pote semanal de la ${gameName} ha sido limpiado exitosamente!`, 'success');
+        
     } catch (error) {
         console.error('Error al limpiar el pote:', error);
         showToast('❌ Error al limpiar el pote', 'error');
@@ -1864,6 +2010,7 @@ function closeResetPlaysModal() {
 async function confirmResetPlays() {
     const confirmBtn = document.querySelector('#resetPlaysModal button[onclick="confirmResetPlays()"]');
     const originalText = confirmBtn.innerHTML;
+    let errorMessage = '';
     
     try {
         // Mostrar indicador de carga
@@ -1875,8 +2022,16 @@ async function confirmResetPlays() {
         const jugadasDB = currentGameType === 'polla' ? JugadasPollaDB : JugadasMicroDB;
 
         try {
+            
+            // Verificar que las funciones de base de datos estén disponibles
+            
+            if (!jugadasDB || !jugadasDB.deleteAll) {
+                throw new Error(`Funciones de base de datos no disponibles para ${gameName}`);
+            }
+            
             // Borrar solo las jugadas del juego actual
             const jugadasRes = await jugadasDB.deleteAll();
+            
             if (!jugadasRes.success) throw new Error(jugadasRes.error || `Error borrando jugadas de ${gameName}`);
 
             // Poner el pote a cero para el JUEGO ACTUAL (no eliminar el registro)
@@ -1884,27 +2039,38 @@ async function confirmResetPlays() {
                 const zeros = { lunes: 0, martes: 0, miércoles: 0, jueves: 0, viernes: 0, sábado: 0, domingo: 0, garantizado: 0, acumulado: 0 };
                 const poteRes = await PotesDB.actualizar(currentGameType, zeros);
                 if (!poteRes.success) console.warn(`No se pudo poner a cero el pote de ${gameName}:`, poteRes.error);
+            } else {
+                console.warn('PotesDB no disponible');
             }
 
             // Eliminar números ganadores del modo actual
             try {
                 if (currentGameType === 'polla') {
-                    if (typeof ResultadosNumerosDB !== 'undefined' && ResultadosNumerosDB.eliminarUltimo) await ResultadosNumerosDB.eliminarUltimo();
+                    if (typeof ResultadosNumerosDB !== 'undefined' && ResultadosNumerosDB.eliminarUltimo) {
+                        const numsRes = await ResultadosNumerosDB.eliminarUltimo();
+                    } else {
+                        console.warn('ResultadosNumerosDB no disponible');
+                    }
                 } else {
                     if (typeof ResultadosMicroDB !== 'undefined') {
                         if (ResultadosMicroDB.deleteAll) {
-                            await ResultadosMicroDB.deleteAll();
+                            const numsRes = await ResultadosMicroDB.deleteAll();
                         } else if (ResultadosMicroDB.eliminarUltimo) {
-                            await ResultadosMicroDB.eliminarUltimo();
+                            const numsRes = await ResultadosMicroDB.eliminarUltimo();
                         }
+                    } else {
+                        console.warn('ResultadosMicroDB no disponible');
                     }
                 }
             } catch (winErr) {
-                console.warn('Error al eliminar números ganadores del juego actual:', winErr);
+                console.error('Error al eliminar números ganadores del juego actual:', winErr);
             }
 
             // Cerrar el modal
             closeResetPlaysModal();
+
+            // Recargar valores del pote desde la base de datos para actualizar la UI
+            await loadPotsFromSupabase();
 
             // Limpiar las tablas y regenerar filas vacías en la UI para el modo actual
             const tableBody = currentGameType === 'polla' ? document.getElementById('pollaTableBody') : document.getElementById('microTableBody');
@@ -1922,7 +2088,7 @@ async function confirmResetPlays() {
             }
 
             // Mostrar mensaje de éxito y actualizar UI
-            showToast('✅ ¡Todas las jugadas han sido reiniciadas exitosamente!', 'success');
+            showToast(`✅ ¡Pote, números ganadores y jugadas de la ${gameName} han sido eliminados exitosamente!`, 'success');
             updatePlaysCounter();
             updateCalculatedStats();
             updateDisplay();
@@ -1931,12 +2097,15 @@ async function confirmResetPlays() {
         }
     } catch (error) {
         console.error('Error al reiniciar jugadas:', error);
-        showToast('Ocurrió un error al reiniciar las jugadas: ' + (error.message || 'Error desconocido'), 'error');
+        errorMessage = 'Ocurrió un error al reiniciar las jugadas: ' + (error.message || 'Error desconocido');
     } finally {
         const confirmBtn = document.querySelector('#resetPlaysModal button[onclick="confirmResetPlays()"]');
         if (confirmBtn) {
             confirmBtn.disabled = false;
             confirmBtn.innerHTML = originalText;
+        }
+        if (errorMessage && typeof showToast === 'function') {
+            showToast(errorMessage, 'error');
         }
     }
 }

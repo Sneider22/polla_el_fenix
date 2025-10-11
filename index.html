@@ -108,6 +108,25 @@
                     Limpiar Pote
                 </button>
 
+                <!-- Configuración de Juego -->
+                <div class="bg-white rounded-lg shadow-lg p-4">
+                    <h3 class="text-center font-bold mb-3 text-gray-800">CONFIGURACIÓN DE JUEGO</h3>
+                    <div class="space-y-2">
+                        <div class="grid grid-cols-2 gap-1 items-center">
+                            <div class="text-sm font-semibold text-gray-700">VALOR POLLA</div>
+                            <div class="bg-gray-100 border rounded p-2">
+                                <input type="number" id="precioJugadaInput" class="w-full text-center border-none outline-none bg-transparent" placeholder="50" value="50">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1 items-center">
+                            <div class="text-sm font-semibold text-gray-700">POTE SEMANAL</div>
+                            <div class="bg-gray-100 border rounded p-2">
+                                <input type="number" id="poteSemanalInput" class="w-full text-center border-none outline-none bg-transparent" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Premios Adicionales -->
                 <div class="bg-white rounded-lg shadow-lg p-4">
                     <h3 class="text-center font-bold mb-3 text-gray-800">PREMIOS ADICIONALES</h3>
@@ -192,7 +211,7 @@
                         <div class="grid grid-cols-2 gap-4 text-center">
                             <div class="bg-white rounded-lg p-3">
                                 <div class="text-sm text-gray-600">VALOR DE LA POLLA</div>
-                                <div class="text-2xl font-bold text-gray-800">50 BS</div>
+                                <div id="precioJugadaValue" class="text-2xl font-bold text-gray-800"></div>
                                 <div class="text-xs text-gray-500">POR JUGADA</div>
                             </div>
                             <div class="bg-white rounded-lg p-3">
@@ -584,6 +603,17 @@
             </div>
         </div>
     </div>
+
+    <!-- Overlay de Carga Global -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-[9999] hidden">
+        <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span id="loadingOverlayText" class="text-xl font-bold text-white">Procesando jugadas...</span>
+    </div>
+
+
     <!-- Librería de Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- Configuración de la aplicación -->

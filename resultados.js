@@ -278,10 +278,12 @@ async function displaySummaryStats() {
     
     // Cargar datos del pote
     let poteSemanal = 0;
+    let precioJugada = 50;
     let garantizado = 0;
     const potesResult = await PotesDB.obtener(currentGameType);
     if (potesResult.success && potesResult.data) {
         const potData = potesResult.data;
+        precioJugada = potData.precioJugada || 50;
         garantizado = potData.garantizado || 0;
 
         const weekdayMap = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
@@ -300,7 +302,7 @@ async function displaySummaryStats() {
         // Si no hay datos, el día actual siempre aporta 143
         poteSemanal = 143;
     }
-    const precioJugada = 50;
+    
     const fullHitWinners = resultsData.filter(player => player.hits === maxPossibleHits);
     const payingPlayersCount = resultsData.filter(player => !player.gratis).length;
     const payingWinners = fullHitWinners.filter(player => !player.gratis);
@@ -319,6 +321,12 @@ async function displaySummaryStats() {
     // Aplicar garantizado
     if (payingWinners.length > 0 && prizePerWinner < garantizado) {
         prizePerWinner = garantizado;
+    }
+
+    // Actualizar el valor de la jugada en la UI de resultados
+    const precioJugadaResultValueEl = document.getElementById('precioJugadaResultValue');
+    if (precioJugadaResultValueEl) {
+        precioJugadaResultValueEl.textContent = precioJugada;
     }
 
     // Actualizar título principal

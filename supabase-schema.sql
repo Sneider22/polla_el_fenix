@@ -135,6 +135,24 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Función para resetear la tabla de la Polla (6 números)
+CREATE OR REPLACE FUNCTION reset_jugadas_polla()
+RETURNS void AS $$
+BEGIN
+  -- TRUNCATE es mucho más rápido que DELETE y además reinicia el contador del ID.
+  TRUNCATE TABLE public.jugadas_polla RESTART IDENTITY;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Función para resetear la tabla del Micro (3 números)
+CREATE OR REPLACE FUNCTION reset_jugadas_micro()
+RETURNS void AS $$
+BEGIN
+  -- TRUNCATE es mucho más rápido que DELETE y además reinicia el contador del ID.
+  TRUNCATE TABLE public.jugadas_micro RESTART IDENTITY;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 
 -- Políticas de seguridad RLS (Row Level Security)
 ALTER TABLE resultados_numeros ENABLE ROW LEVEL SECURITY;
@@ -148,6 +166,10 @@ ALTER TABLE resultados_micro ENABLE ROW LEVEL SECURITY;
 -- Permisos para la función de reseteo
 GRANT EXECUTE ON FUNCTION reset_game_data() TO anon;
 GRANT EXECUTE ON FUNCTION reset_game_data() TO authenticated;
+GRANT EXECUTE ON FUNCTION reset_jugadas_polla() TO authenticated;
+GRANT EXECUTE ON FUNCTION reset_jugadas_polla() TO anon;
+GRANT EXECUTE ON FUNCTION reset_jugadas_micro() TO authenticated;
+GRANT EXECUTE ON FUNCTION reset_jugadas_micro() TO anon;
 
 -- Políticas para permitir operaciones básicas (ajustar según necesidades de seguridad)
 CREATE POLICY "Permitir lectura de resultados_numeros" ON resultados_numeros FOR SELECT USING (true);
