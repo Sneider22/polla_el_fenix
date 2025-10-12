@@ -668,13 +668,7 @@ function updateTotalPot() {
     updateCalculatedStats();
 
     // Guardar en la base de datos con debounce
-    debounce(() => {
-        if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
-            PotesDB.actualizar(currentGameType, currentDayValues).catch(err => {
-                console.error("Error al guardar el pote en la BD:", err);
-            });
-        }
-    }, 1000); // Guardar 1 segundo después de la última modificación
+    debouncedSavePot();
 }
 
 // Función para actualizar y guardar premios adicionales
@@ -692,13 +686,7 @@ function updateAdditionalPrizes() {
     updateCalculatedStats();
 
     // Save to DB using the same debounce logic as the pot
-    debounce(() => {
-        if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
-            PotesDB.actualizar(currentGameType, dailyValues[currentGameType]).catch(err => {
-                console.error("Error al guardar premios adicionales en la BD:", err);
-            });
-        }
-    }, 1000);
+    debouncedSaveAdditionalPrizes();
 }
 
 // Función para actualizar configuración de juego
@@ -730,13 +718,7 @@ function updateGameConfiguration() {
     updateCalculatedStats();
 
     // Save to DB using the same debounce logic as the pot
-    debounce(() => {
-        if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
-            PotesDB.actualizar(currentGameType, dailyValues[currentGameType]).catch(err => {
-                console.error("Error al guardar configuración de juego en la BD:", err);
-            });
-        }
-    }, 1000);
+    debouncedSavePot();
 }
 
 
@@ -1490,6 +1472,7 @@ function updateCalculatedStats() {
     const premioTotal = payingPlayersCount * precioJugada;
     const recaudadoParaPremio = premioTotal * 0.8;
 
+    const gananciaCasa = premioTotal * 0.2;
     const garantizado = dailyValues[currentGameType].garantizado || 0;
     const acumulado = dailyValues[currentGameType].acumulado || 0;
     
@@ -1520,6 +1503,7 @@ function updateCalculatedStats() {
 
     // 9. Actualizar la interfaz
     updateStatDisplay('menos20', recaudadoParaPremio); // Esto es "Aporte a Premio (80%)"
+    updateStatDisplay('houseCut', gananciaCasa);
     updateStatDisplay('pote', poteSemanalUsuario);
     updateStatDisplay('plays', completePlayers.length);
     updateStatDisplay('gratis', gratisCount);
@@ -1538,6 +1522,7 @@ function updateStatDisplay(statType, value) {
         'total': document.getElementById('totalValue'),
         'menos20': document.getElementById('menos20Value'),
         'pote': document.getElementById('poteValue'),
+        'houseCut': document.getElementById('houseCutValue'),
         'plays': document.getElementById('playsCount'),
         'gratis': document.getElementById('gratisCount'),
         'garantizado': document.getElementById('garantizadoValue'),
@@ -1887,6 +1872,30 @@ const updateDisplay = debounce(() => {
         updateCalculatedStats();
     }
 }, PERF_CONFIG.debounceTime);
+
+// ===== FUNCIONES DE GUARDADO DE DATOS CON DEBOUNCE =====
+
+const debouncedSavePot = debounce(() => {
+    if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
+        const currentValues = dailyValues[currentGameType];
+        if (currentValues) {
+            PotesDB.actualizar(currentGameType, currentValues).catch(err => {
+                console.error("Error al guardar el pote en la BD:", err);
+            });
+        }
+    }
+}, 1000); // Guardar 1 segundo después de la última modificación
+
+const debouncedSaveAdditionalPrizes = debounce(() => {
+    if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
+        const currentValues = dailyValues[currentGameType];
+        if (currentValues) {
+            PotesDB.actualizar(currentGameType, currentValues).catch(err => {
+                console.error("Error al guardar premios adicionales en la BD:", err);
+            });
+        }
+    }
+}, 1000);
 
 // ===== FUNCIONES PARA MODALES =====
 
