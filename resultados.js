@@ -310,7 +310,7 @@ async function displaySummaryStats() {
     const totalCollected = payingPlayersCount * precioJugada;
     const recaudadoParaPremio = totalCollected * 0.8;
     // Restar el pote semanal del premio total según la nueva regla
-    let prizePool = recaudadoParaPremio + poteSemanal - 143;
+    let prizePool = recaudadoParaPremio - poteSemanal;
     if (prizePool < 0) prizePool = 0;
 
     let prizePerWinner = 0;
