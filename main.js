@@ -1478,7 +1478,7 @@ function updateCalculatedStats() {
     
     // 4. Calcular el pozo total para el premio mayor
     // El pote semanal del usuario ya incluye el pote diario (-143), por lo que solo se suma
-    const pozoTotal = recaudadoParaPremio + poteSemanalUsuario + acumulado;
+    const pozoTotal = recaudadoParaPremio - poteSemanalUsuario + acumulado;
 
     // 5. Identificar ganadores usando umbral fijo (6 para polla, 3 para micro)
     const thresholdHits = currentGameType === 'polla' ? 6 : 3;
