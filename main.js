@@ -877,19 +877,20 @@ async function deletePlay(rowId) {
     applyHitsColors(row, 0, currentGameType);
         setupRowEvents(row); // Volver a adjuntar eventos a las nuevas celdas
     }
-
-    updatePlaysCounter();
-    showToast(`Jugada #${rowId} eliminada.`, 'success');
 }
 
-// Guarda los datos de una sola fila en la base de datos
 async function saveRowData(row) {
     const rowId = parseInt(row.dataset.rowId, 10);
     const targetPlayersArray = currentGameType === 'polla' ? pollaPlayers : microPlayers;
     const playerData = targetPlayersArray.find(p => p.id === rowId);
 
-    if (!playerData || !playerData.isComplete) {
-        return; // No guardar filas incompletas
+    if (!playerData) {
+        return; // No hay datos del jugador
+    }
+
+    // Mostrar notificación si la jugada no está completa
+    if (!playerData.isComplete) {
+        showToast('La jugada no tiene todos los números completos', 'warning');
     }
 
     // Evitar guardados concurrentes para la misma fila
@@ -2064,14 +2065,18 @@ async function confirmResetPlays() {
             
             // Verificar que las funciones de base de datos estén disponibles
             
-            if (!jugadasDB || !jugadasDB.deleteAll) {
+            if (!jugadasDB || !jugadasDB.truncate) {
                 throw new Error(`Funciones de base de datos no disponibles para ${gameName}`);
             }
             
-            // Borrar solo las jugadas del juego actual
-            const jugadasRes = await jugadasDB.deleteAll();
-            
-            if (!jugadasRes.success) throw new Error(jugadasRes.error || `Error borrando jugadas de ${gameName}`);
+            // Borrar solo las jugadas del juego actual usando las nuevas funciones de truncado
+            if (currentGameType === 'polla') {
+                const jugadasRes = await truncateJugadasPolla();
+                if (!jugadasRes.success) throw new Error(jugadasRes.error || `Error truncando jugadas de ${gameName}`);
+            } else {
+                const jugadasRes = await truncateJugadasMicro();
+                if (!jugadasRes.success) throw new Error(jugadasRes.error || `Error truncando jugadas de ${gameName}`);
+            }
 
             // Poner el pote a cero para el JUEGO ACTUAL (no eliminar el registro)
             if (typeof PotesDB !== 'undefined' && PotesDB.actualizar) {
