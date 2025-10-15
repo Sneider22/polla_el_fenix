@@ -227,9 +227,17 @@ const JugadasMicroDB = {
 
     // Actualizar múltiples jugadas de 3 números
     async actualizar(jugadasData) {
-        // Esta función no está implementada en el frontend
-        console.warn('JugadasMicroDB.actualizar no está implementado en el frontend.');
-        return { success: false, error: 'Función no implementada' };
+        try {
+            const { data, error } = await supabaseClient
+                .from('jugadas_micro')
+                .upsert(jugadasData)
+                .select();
+            if (error) throw error;
+            return { success: true, data: data };
+        } catch (error) {
+            console.error('Error al actualizar jugadas en jugadas_micro:', error);
+            return { success: false, error: error.message };
+        }
     },
 };
 

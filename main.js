@@ -720,7 +720,7 @@ function updateAdditionalPrizes() {
 function updateGameConfiguration() {
     const precioJugada = parseInt(document.getElementById('precioJugadaInput').value) || 50;
     let poteDiario = parseInt(document.getElementById('poteDiarioInput').value) || 0;
-    const acumulado = parseInt(document.getElementById('acumuladoConfigInput').value) || 0;
+    const acumulado = parseInt(document.getElementById('acumuladoInput').value) || 0;
     
     const currentValues = dailyValues[currentGameType];
     
@@ -2673,10 +2673,11 @@ document.addEventListener('DOMContentLoaded', function() {
 // Exportar funciones para uso global
 window.openAddPlayerModal = openAddPlayerModal;
 window.closeAddPlayerModal = closeAddPlayerModal;
-window.openPlayerManagerModal = openPlayerManagerModal;
-window.closePlayerManagerModal = closePlayerManagerModal;
 window.addPlayerToDatabase = addPlayerToDatabase;
 window.removePlayerFromDatabase = removePlayerFromDatabase;
 window.resetAll = resetAll;
 window.clearCurrentPot = clearCurrentPot;
+window.openClearPotModal = openClearPotModal;
+window.closeClearPotModal = closeClearPotModal;
+window.confirmClearPot = confirmClearPot;
 window.deletePlay = deletePlay;
