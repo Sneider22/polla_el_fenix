@@ -195,7 +195,7 @@ async function loadDataFromSupabase() {
             
             // Calcular el pozo total para el premio mayor
             // Restar el pote semanal del pozo total (según especificación)
-            let pozoTotal = recaudadoParaPremio + poteSemanal - 143;
+            let pozoTotal = recaudadoParaPremio + poteSemanal + garantizado + acumulado;
             // Asegurar que no sea negativo
             if (pozoTotal < 0) pozoTotal = 0;
 
@@ -280,28 +280,16 @@ async function displaySummaryStats() {
     let poteSemanal = 0;
     let precioJugada = 50;
     let garantizado = 0;
+    let acumulado = 0;
     const potesResult = await PotesDB.obtener(currentGameType);
+    console.log("potesResult", potesResult.data);
     if (potesResult.success && potesResult.data) {
         const potData = potesResult.data;
         precioJugada = potData.precioJugada || 50;
         garantizado = potData.garantizado || 0;
-
-        const weekdayMap = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-        const todayName = weekdayMap[new Date().getDay()];
-
-        const lunes = (todayName === 'lunes') ? 143 : (potData.lunes || 0);
-        const martes = (todayName === 'martes') ? 143 : (potData.martes || 0);
-        const miercoles = (todayName === 'miércoles') ? 143 : (potData.miércoles || 0);
-        const jueves = (todayName === 'jueves') ? 143 : (potData.jueves || 0);
-        const viernes = (todayName === 'viernes') ? 143 : (potData.viernes || 0);
-        const sabado = (todayName === 'sábado') ? 143 : (potData.sábado || 0);
-        const domingo = (todayName === 'domingo') ? 143 : (potData.domingo || 0);
-
-        poteSemanal = lunes + martes + miercoles + jueves + viernes + sabado + domingo;
-    } else {
-        // Si no hay datos, el día actual siempre aporta 143
-        poteSemanal = 143;
-    }
+        acumulado = potData.acumulado || 0;
+        poteSemanal = potData.poteSemanal || 0;
+    } 
     
     const fullHitWinners = resultsData.filter(player => player.hits === maxPossibleHits);
     const payingPlayersCount = resultsData.filter(player => !player.gratis).length;
@@ -310,14 +298,13 @@ async function displaySummaryStats() {
     const totalCollected = payingPlayersCount * precioJugada;
     const recaudadoParaPremio = totalCollected * 0.8;
     // Restar el pote semanal del premio total según la nueva regla
-    let prizePool = recaudadoParaPremio - poteSemanal;
+    let prizePool = recaudadoParaPremio + poteSemanal + garantizado + acumulado;
     if (prizePool < 0) prizePool = 0;
 
     let prizePerWinner = 0;
     if (payingWinners.length > 0) {
         prizePerWinner = Math.floor(prizePool / payingWinners.length);
     }
-
     // Aplicar garantizado
     if (payingWinners.length > 0 && prizePerWinner < garantizado) {
         prizePerWinner = garantizado;
@@ -345,8 +332,9 @@ async function displaySummaryStats() {
 }
 
 // Mostrar tabla de resultados
-function displayResultsTable(dataToDisplay) {
+async function displayResultsTable(dataToDisplay) {
     const tableBody = document.getElementById('resultsTableBody');
+    console.log("dataToDisplay", dataToDisplay);
     tableBody.innerHTML = '';
 
     if (dataToDisplay.length === 0) {
@@ -360,6 +348,17 @@ function displayResultsTable(dataToDisplay) {
         }
         tableBody.appendChild(row);
         return;
+    }
+
+    // Cargar datos del pote para obtener el valor diario
+    let potData = null;
+    try {
+        const potesResult = await PotesDB.obtener(currentGameType);
+        if (potesResult.success && potesResult.data) {
+            potData = potesResult.data;
+        }
+    } catch (error) {
+        console.error("Error cargando datos del pote:", error);
     }
 
     dataToDisplay.forEach((player) => {
@@ -439,7 +438,16 @@ function displayResultsTable(dataToDisplay) {
         prizeCell.className = 'px-6 py-4 text-center font-bold';
         prizeCell.className = 'px-2 sm:px-6 py-4 text-center font-bold';
         if (player.prize > 0) {
-            prizeCell.textContent = `${player.prize} BS`;
+            // Obtener el pote diario desde la configuración de la base de datos
+            const weekdayMap = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+            const poteDiario = potData ? potData.poteDiario : 0;
+
+            // Sumar el premio base más el pote diario, acumulado y garantizado proporcionalmente
+            const totalPrize = player.prize + poteDiario;
+            console.log("totalPrize", totalPrize);
+            console.log("player.prize", player.prize);
+            
+            prizeCell.textContent = `${Math.max(0, totalPrize)} BS`;
             prizeCell.className += ' text-black';
         } else {
             prizeCell.textContent = '-';
