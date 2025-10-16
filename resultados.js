@@ -153,6 +153,7 @@ async function loadDataFromSupabase() {
         if (ticketsResult.success && Array.isArray(ticketsResult.data)) {
             const tickets = ticketsResult.data;
             
+            let seqCounter = 1;
             resultsData = tickets
                 .map(ticket => {
                     const playerName = ticket.nombre_jugador || 'Jugador Desconocido';
@@ -173,14 +174,17 @@ async function loadDataFromSupabase() {
                     let hits = 0;
                     playerNumbers.forEach(number => { if (winningNumbers.includes(number)) hits++; });
 
-                    return {
+                    const player = {
                         id: ticket.id,
+                        seq_id: seqCounter++,
                         name: playerName,
                         numbers: playerNumbers,
                         hits: hits,
                         gratis: ticket.gratis,
                         prize: 0 // Se calculará después
                     };
+
+                    return player;
                 });
 
             // Encontrar el número máximo de aciertos
@@ -362,6 +366,7 @@ async function displayResultsTable(dataToDisplay) {
     }
 
     dataToDisplay.forEach((player) => {
+        console.log("player", player);
         const row = document.createElement('tr');
         row.className = 'bg-white border-b hover:bg-gray-50';
         // Mostrar el nombre completo del jugador al pasar el cursor
@@ -399,9 +404,9 @@ async function displayResultsTable(dataToDisplay) {
         // 1. ID Jugador
         const positionCell = document.createElement('td');
         positionCell.className = 'px-2 py-2 font-bold text-center text-gray-900';
-        positionCell.textContent = player.id;
+        positionCell.textContent = player.seq_id;
         if (player.hits === maxPossibleHits && player.hits > 0) {
-            positionCell.innerHTML = `🏆 ${player.id}`;
+            positionCell.innerHTML = `🏆 ${player.seq_id}`;
         }
 
         // 2. Nombre
@@ -503,7 +508,7 @@ function exportResults() {
     let csvContent = 'ID,Nombre,Números,Aciertos,Gratis,Premio\n';
     
     dataToExport.forEach((player) => {
-        const id = player.id;
+        const id = player.seq_id;
         const numbers = player.numbers.join('-');
         const gratis = player.gratis ? 'SÍ' : 'NO';
         const prize = player.prize > 0 ? `${player.prize} BS` : '-';

@@ -508,28 +508,7 @@ async function resetAllGameData() {
     }
 }
 
-// Funciones SQL para truncar tablas de jugadas
-async function truncateJugadasPolla() {
-    try {
-        const { error } = await supabaseClient.rpc('truncate_jugadas_polla');
-        if (error) throw error;
-        return { success: true };
-    } catch (error) {
-        console.error('Error al truncar jugadas_polla:', error);
-        return { success: false, error: error.message };
-    }
-}
 
-async function truncateJugadasMicro() {
-    try {
-        const { error } = await supabaseClient.rpc('truncate_jugadas_micro');
-        if (error) throw error;
-        return { success: true };
-    } catch (error) {
-        console.error('Error al truncar jugadas_micro:', error);
-        return { success: false, error: error.message };
-    }
-}
 
 // Exportar funciones para uso global
 window.initializeSupabase = initializeSupabase;

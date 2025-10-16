@@ -778,6 +778,35 @@ async function resetAll() {
         closeModal();
         const gameName = currentGameType === 'polla' ? 'Polla' : 'Micro';
         const jugadasDB = currentGameType === 'polla' ? JugadasPollaDB : JugadasMicroDB;
+        // Verificar que las funciones de base de datos estén disponibles
+        if (!jugadasDB || !jugadasDB.deleteAll) {
+            throw new Error(`Funciones de base de datos no disponibles para ${gameName}`);
+        }
+
+        // Verificar que la función de truncado esté disponible
+        const truncateFunction = currentGameType === 'polla' ? async function truncateJugadasPolla() {
+    try {
+        const { error } = await supabaseClient.rpc('truncate_jugadas_polla');
+        if (error) throw error;
+        return { success: true };
+    } catch (error) {
+        console.error('Error al truncar jugadas_polla:', error);
+        return { success: false, error: error.message };
+    }
+}
+ : async function truncateJugadasMicro() {
+    try {
+        const { error } = await supabaseClient.rpc('truncate_jugadas_micro');
+        if (error) throw error;
+        return { success: true };
+    } catch (error) {
+        console.error('Error al truncar jugadas_micro:', error);
+        return { success: false, error: error.message };
+    }
+};
+        if (typeof truncateFunction !== 'function') {
+            throw new Error(`Función de truncado no disponible para ${gameName}`);
+        }
         try {
             // Borrar las jugadas del juego actual
             const jugadasRes = await jugadasDB.deleteAll();
@@ -2062,20 +2091,19 @@ async function confirmResetPlays() {
         const jugadasDB = currentGameType === 'polla' ? JugadasPollaDB : JugadasMicroDB;
 
         try {
-            
+
             // Verificar que las funciones de base de datos estén disponibles
-            
-            if (!jugadasDB || !jugadasDB.truncate) {
+            if (!jugadasDB || !jugadasDB.deleteAll) {
                 throw new Error(`Funciones de base de datos no disponibles para ${gameName}`);
             }
             
-            // Borrar solo las jugadas del juego actual usando las nuevas funciones de truncado
+            // Borrar solo las jugadas del juego actual usando las funciones de borrado
             if (currentGameType === 'polla') {
-                const jugadasRes = await truncateJugadasPolla();
-                if (!jugadasRes.success) throw new Error(jugadasRes.error || `Error truncando jugadas de ${gameName}`);
+                const jugadasRes = await JugadasPollaDB.deleteAll();
+                if (!jugadasRes.success) throw new Error(jugadasRes.error || `Error borrando jugadas de ${gameName}`);
             } else {
-                const jugadasRes = await truncateJugadasMicro();
-                if (!jugadasRes.success) throw new Error(jugadasRes.error || `Error truncando jugadas de ${gameName}`);
+                const jugadasRes = await JugadasMicroDB.deleteAll();
+                if (!jugadasRes.success) throw new Error(jugadasRes.error || `Error borrando jugadas de ${gameName}`);
             }
 
             // Poner el pote a cero para el JUEGO ACTUAL (no eliminar el registro)
@@ -2681,7 +2709,7 @@ window.closeAddPlayerModal = closeAddPlayerModal;
 window.addPlayerToDatabase = addPlayerToDatabase;
 window.removePlayerFromDatabase = removePlayerFromDatabase;
 window.resetAll = resetAll;
-window.clearCurrentPot = clearCurrentPot;
+window.clearCurrentPot = confirmClearPot;
 window.openClearPotModal = openClearPotModal;
 window.closeClearPotModal = closeClearPotModal;
 window.confirmClearPot = confirmClearPot;
