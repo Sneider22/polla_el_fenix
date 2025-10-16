@@ -89,6 +89,7 @@ function setupTabs() {
 async function loadAndDisplayData() {
     await loadDataFromSupabase();
     displayResults();
+    generatePreviewImage(); // Generar imagen preliminar después de cargar datos
 }
 
 async function loadDataFromSupabase() {
@@ -604,8 +605,69 @@ async function resetCurrentGame() {
     }
 }
 
-// Exportar funciones para uso global
-window.exportResults = exportResults;
-window.printResults = printResults;
-window.updateResults = updateResults;
-window.resetCurrentGame = resetCurrentGame;
+// Función para generar imagen preliminar dinámica
+function generatePreviewImage() {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 1200;
+    canvas.height = 630;
+
+    // Fondo con gradiente similar al sitio
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, '#f8d74b');
+    gradient.addColorStop(1, '#ffc000');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Título
+    ctx.fillStyle = '#a61c00';
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🐦‍🔥 RESULTADOS POLLA EL FÉNIX 🐦‍🔥', canvas.width / 2, 60);
+
+    // Números ganadores
+    if (winningNumbers.length > 0) {
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 24px Arial';
+        ctx.fillText('Números Ganadores:', canvas.width / 2, 120);
+
+        winningNumbers.forEach((num, index) => {
+            ctx.fillStyle = '#06402b';
+            ctx.fillRect(canvas.width / 2 - 150 + index * 50, 140, 40, 40);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(num, canvas.width / 2 - 130 + index * 50, 165);
+        });
+    }
+
+    // Estadísticas
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 28px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Total Jugadas: ${resultsData.length}`, 50, 250);
+    ctx.fillText(`Ganadores: ${resultsData.filter(p => p.hits === (currentGameType === 'polla' ? 6 : 3)).length}`, 50, 300);
+    ctx.fillText(`Premio Total: ${document.getElementById('totalPrizeResult').textContent}`, 50, 350);
+    ctx.fillText(`Premio por Ganador: ${document.getElementById('prizePerWinnerResult').textContent}`, 50, 400);
+
+    // Logo o imagen adicional (opcional)
+    const logo = new Image();
+    logo.onload = () => {
+        ctx.drawImage(logo, canvas.width - 150, canvas.height - 150, 120, 120);
+        updateMetaTags(canvas.toDataURL());
+    };
+    logo.onerror = () => {
+        updateMetaTags(canvas.toDataURL());
+    };
+    logo.src = 'Logo Fenix.png'; // Ajusta la ruta si es necesario
+}
+
+// Función para actualizar meta tags con la imagen generada
+function updateMetaTags(imageDataUrl) {
+    const currentUrl = window.location.href;
+    document.querySelector('meta[property="og:title"]').setAttribute('content', `Resultados del Día - ${currentGameType === 'polla' ? 'Polla' : 'Micro'} El Fénix`);
+    document.querySelector('meta[property="og:description"]').setAttribute('content', `Resultados de hoy: ${winningNumbers.join(', ')} | Jugadas: ${resultsData.length} | Premio: ${document.getElementById('totalPrizeResult').textContent}`);
+    document.querySelector('meta[property="og:image"]').setAttribute('content', imageDataUrl);
+    document.querySelector('meta[property="og:url"]').setAttribute('content', currentUrl);
+    document.querySelector('meta[name="twitter:card"]').setAttribute('content', 'summary_large_image');
+}
