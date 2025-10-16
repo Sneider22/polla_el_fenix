@@ -224,8 +224,18 @@ async function loadDataFromSupabase() {
                 }
             });
 
-            // Ordenar por aciertos (descendente) y luego por nombre
-            resultsData.sort((a, b) => b.hits - a.hits || a.name.localeCompare(b.name));
+            // Ordenar por aciertos (descendente) y luego por seq_id si no hay aciertos, o por nombre
+            resultsData.sort((a, b) => {
+                if (a.hits !== b.hits) {
+                    return b.hits - a.hits;
+                } else {
+                    if (a.hits === 0) {
+                        return a.seq_id - b.seq_id; // Ordenar por # cuando no hay aciertos
+                    } else {
+                        return a.name.localeCompare(b.name);
+                    }
+                }
+            });
 
             // Añadir la posición después de ordenar
             resultsData.forEach((player, index) => {
