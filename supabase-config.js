@@ -84,20 +84,20 @@ const JugadoresDB = {
     }
 };
 
-// Funciones para la tabla 'jugadas_polla_vista'
+// Funciones para la tabla 'jugadas_polla'
 const JugadasPollaDB = {
     // Crear una nueva jugada
     async crear(jugadaData) {
         try {
             const { data, error } = await supabaseClient
-                .from('jugadas_polla_vista')
+                .from('jugadas_polla')
                 .insert(jugadaData) // Acepta un objeto o un array de objetos
                 .select();
             if (error) throw error;
             return { success: true, data: data };
         } catch (error) {
             // Log a more descriptive error message
-            console.error('Error al crear jugada en jugadas_polla_vista:', error.message || error);
+            console.error('Error al crear jugada en jugadas_polla:', error.message || error);
             return { success: false, error: error.message };
         }
     },
@@ -112,7 +112,7 @@ const JugadasPollaDB = {
             if (error) throw error;
             return { success: true, data: data };
         } catch (error) {
-            console.error('Error al obtener jugadas de jugadas_polla:', error);
+            console.error('Error al obtener jugadas de jugadas_polla_vista:', error);
             return { success: false, error: error.message };
         }
     },
@@ -121,13 +121,13 @@ const JugadasPollaDB = {
     async eliminar(id) {
         try {
             const { error } = await supabaseClient
-                .from('jugadas_polla_vista')
+                .from('jugadas_polla')
                 .delete()
                 .eq('id', id);
             if (error) throw error;
             return { success: true };
         } catch (error) {
-            console.error('Error al eliminar jugada de jugadas_polla_vista:', error);
+            console.error('Error al eliminar jugada de jugadas_polla:', error);
             return { success: false, error: error.message };
         }
     },
@@ -136,7 +136,7 @@ const JugadasPollaDB = {
     async deleteAll() {
         try {
             const { error } = await supabaseClient
-                .from('jugadas_polla_vista')
+                .from('jugadas_polla')
                 .delete()
                 .gt('id', 0); // Condición para borrar todo
             if (error) throw error;
@@ -151,13 +151,13 @@ const JugadasPollaDB = {
     async actualizar(jugadasData) {
         try {
             const { data, error } = await supabaseClient
-                .from('jugadas_polla_vista')
+                .from('jugadas_polla')
                 .upsert(jugadasData)
                 .select();
             if (error) throw error;
             return { success: true, data: data };
         } catch (error) {
-            console.error('Error al actualizar jugadas en jugadas_polla_vista:', error);
+            console.error('Error al actualizar jugadas en jugadas_polla:', error);
             return { success: false, error: error.message };
         }
     },
@@ -500,13 +500,13 @@ const PotesDB = {
 async function truncateJugadasPolla() {
     try {
         const { error } = await supabaseClient
-            .from('jugadas_polla_vista')
+            .from('jugadas_polla')
             .delete()
             .neq('id', 0); // Eliminar todas las filas
         if (error) throw error;
         return { success: true };
     } catch (error) {
-        console.error('Error al truncar jugadas_polla_vista:', error);
+        console.error('Error al truncar jugadas_polla:', error);
         return { success: false, error: error.message };
     }
 }
@@ -515,13 +515,13 @@ async function truncateJugadasPolla() {
 async function truncateJugadasMicro() {
     try {
         const { error } = await supabaseClient
-            .from('jugadas_micro_vista')
+            .from('jugadas_micro')
             .delete()
             .neq('id', 0); // Eliminar todas las filas
         if (error) throw error;
         return { success: true };
     } catch (error) {
-        console.error('Error al truncar jugadas_micro_vista:', error);
+        console.error('Error al truncar jugadas_micro:', error);
         return { success: false, error: error.message };
     }
 }

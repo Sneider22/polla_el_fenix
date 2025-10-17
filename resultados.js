@@ -307,7 +307,6 @@ async function displaySummaryStats() {
     
     const fullHitWinners = resultsData.filter(player => player.hits === maxPossibleHits);
     const payingPlayersCount = resultsData.filter(player => !player.gratis).length;
-    const payingWinners = fullHitWinners.filter(player => !player.gratis);
 
     const totalCollected = payingPlayersCount * precioJugada;
     const recaudadoParaPremio = totalCollected * 0.8;
