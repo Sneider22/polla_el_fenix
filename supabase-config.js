@@ -84,20 +84,20 @@ const JugadoresDB = {
     }
 };
 
-// Funciones para la tabla 'jugadas_polla'
+// Funciones para la tabla 'jugadas_polla_vista'
 const JugadasPollaDB = {
     // Crear una nueva jugada
     async crear(jugadaData) {
         try {
             const { data, error } = await supabaseClient
-                .from('jugadas_polla')
+                .from('jugadas_polla_vista')
                 .insert(jugadaData) // Acepta un objeto o un array de objetos
                 .select();
             if (error) throw error;
             return { success: true, data: data };
         } catch (error) {
             // Log a more descriptive error message
-            console.error('Error al crear jugada en jugadas_polla:', error.message || error);
+            console.error('Error al crear jugada en jugadas_polla_vista:', error.message || error);
             return { success: false, error: error.message };
         }
     },
@@ -121,13 +121,13 @@ const JugadasPollaDB = {
     async eliminar(id) {
         try {
             const { error } = await supabaseClient
-                .from('jugadas_polla')
+                .from('jugadas_polla_vista')
                 .delete()
                 .eq('id', id);
             if (error) throw error;
             return { success: true };
         } catch (error) {
-            console.error('Error al eliminar jugada de jugadas_polla:', error);
+            console.error('Error al eliminar jugada de jugadas_polla_vista:', error);
             return { success: false, error: error.message };
         }
     },
@@ -136,7 +136,7 @@ const JugadasPollaDB = {
     async deleteAll() {
         try {
             const { error } = await supabaseClient
-                .from('jugadas_polla')
+                .from('jugadas_polla_vista')
                 .delete()
                 .gt('id', 0); // Condición para borrar todo
             if (error) throw error;
@@ -151,13 +151,13 @@ const JugadasPollaDB = {
     async actualizar(jugadasData) {
         try {
             const { data, error } = await supabaseClient
-                .from('jugadas_polla')
+                .from('jugadas_polla_vista')
                 .upsert(jugadasData)
                 .select();
             if (error) throw error;
             return { success: true, data: data };
         } catch (error) {
-            console.error('Error al actualizar jugadas en jugadas_polla:', error);
+            console.error('Error al actualizar jugadas en jugadas_polla_vista:', error);
             return { success: false, error: error.message };
         }
     },
@@ -184,7 +184,7 @@ const JugadasMicroDB = {
     async obtenerTodas() {
         try {
             const { data, error } = await supabaseClient
-                .from('jugadas_micro')
+                .from('jugadas_micro_vista')
                 .select('*')
                 .order('created_at');
             if (error) throw error;
@@ -496,14 +496,32 @@ const PotesDB = {
     }
 };
 
-// Función para resetear todos los datos del juego llamando a un RPC
-async function resetAllGameData() {
+// Función para truncar todas las jugadas de polla
+async function truncateJugadasPolla() {
     try {
-        const { error } = await supabaseClient.rpc('reset_game_data');
+        const { error } = await supabaseClient
+            .from('jugadas_polla_vista')
+            .delete()
+            .neq('id', 0); // Eliminar todas las filas
         if (error) throw error;
         return { success: true };
     } catch (error) {
-        console.error('Error al resetear los datos del juego:', error);
+        console.error('Error al truncar jugadas_polla_vista:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Función para truncar todas las jugadas de micro
+async function truncateJugadasMicro() {
+    try {
+        const { error } = await supabaseClient
+            .from('jugadas_micro_vista')
+            .delete()
+            .neq('id', 0); // Eliminar todas las filas
+        if (error) throw error;
+        return { success: true };
+    } catch (error) {
+        console.error('Error al truncar jugadas_micro_vista:', error);
         return { success: false, error: error.message };
     }
 }

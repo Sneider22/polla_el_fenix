@@ -289,7 +289,8 @@ async function displaySummaryStats() {
     
     // Cargar datos del pote
     let poteSemanal = 0;
-    let precioJugada = 50;
+    let poteDiario = 0;
+   let precioJugada = 50;
     let garantizado = 0;
     let acumulado = 0;
     let potData = null;
@@ -300,7 +301,9 @@ async function displaySummaryStats() {
         garantizado = potData.garantizado || 0;
         acumulado = potData.acumulado || 0;
         poteSemanal = potData.poteSemanal || 0;
+        poteDiario = potData.poteDiario || 0;
     } 
+        console.log("potData", potData);
     
     const fullHitWinners = resultsData.filter(player => player.hits === maxPossibleHits);
     const payingPlayersCount = resultsData.filter(player => !player.gratis).length;
@@ -309,7 +312,7 @@ async function displaySummaryStats() {
     const totalCollected = payingPlayersCount * precioJugada;
     const recaudadoParaPremio = totalCollected * 0.8;
     // Calcular el pozo total para el premio mayor según la nueva fórmula
-    let prizePool = recaudadoParaPremio + poteSemanal + garantizado + acumulado;
+    let prizePool = recaudadoParaPremio +  poteDiario + garantizado + acumulado;
 
     if (prizePool < 0) prizePool = 0;
 
@@ -535,6 +538,7 @@ async function updateResults() {
     await loadAndDisplayData();
 }
 
+// Función para resetear el juego actual (eliminar todas las jugadas)
 async function resetCurrentGame() {
     // Mostrar modal de confirmación en lugar de confirm()
     const modal = document.getElementById('confirmResetModal');
@@ -564,11 +568,11 @@ async function resetCurrentGame() {
         try {
             let deleteResult;
             if (currentGameType === 'polla') {
-                // Asumo que existe una función `borrarTodas` en el objeto `JugadasPollaDB`
-                deleteResult = await JugadasPollaDB.borrarTodas();
+                // Usar la función truncate para eliminar todas las jugadas de polla
+                deleteResult = await truncateJugadasPolla();
             } else {
-                // Asumo que existe una función `borrarTodas` en el objeto `JugadasMicroDB`
-                deleteResult = await JugadasMicroDB.borrarTodas();
+                // Usar la función truncate para eliminar todas las jugadas de micro
+                deleteResult = await truncateJugadasMicro();
             }
 
             if (deleteResult.success) {
@@ -583,7 +587,11 @@ async function resetCurrentGame() {
             console.error(`Error al intentar resetear las jugadas de ${gameName}:`, error);
             alert('Se produjo un error inesperado. Revisa la consola para más detalles.');
         }
-    }
+    };
+
+    // Añadir event listeners
+    cancelBtn.addEventListener('click', onCancel);
+    confirmBtn.addEventListener('click', onConfirm);
 }
 
 // Función para generar imagen preliminar dinámica
