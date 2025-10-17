@@ -106,9 +106,9 @@ const JugadasPollaDB = {
     async obtenerTodas() {
         try {
             const { data, error } = await supabaseClient
-                .from('jugadas_polla')
+                .from('jugadas_polla_vista')
                 .select('*')
-                .order('created_at');
+                .order('id_consecutivo', { ascending: true });
             if (error) throw error;
             return { success: true, data: data };
         } catch (error) {

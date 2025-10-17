@@ -310,7 +310,7 @@ async function handleTablePaste(e) {
 
     // Indice inicial desde el que buscaremos filas disponibles (data-row-id numérico)
     let currentIndex = parseInt(startRow.dataset.rowId || startRow.rowIndex, 10);
-    if (isNaN(currentIndex) || currentIndex < 1) currentIndex = 1;
+    if (isNaN(currentIndex) || currentIndex < 1) currentIndex = 1; // Empezar desde fila 2 para evitar la primera
 
     for (let i = 0; i < lines.length; i++) {
         // Preferir '|' como delimitador (evita romper nombres que contienen ',' o '.')
@@ -342,9 +342,31 @@ async function handleTablePaste(e) {
             searchIdx++;
         }
 
-        // Si no encontramos una fila vacía, usaremos currentIndex aunque sobrescriba; seguir desde allí
+        // Si no encontramos una fila vacía secuencialmente, buscar desde el principio (priorizar fila 1)
+        if (!foundRow) {
+            for (let searchIdx = 1; searchIdx <= totalRows; searchIdx++) {
+                const candidate = tbody.querySelector(`tr[data-row-id="${searchIdx}"]`);
+                if (!candidate) continue;
+
+                const nameCellCandidate = candidate.querySelector('td[data-editable="name"]');
+                const numberCellsCandidate = Array.from(candidate.querySelectorAll('td[data-editable="number"]'));
+                const nameEmpty = !nameCellCandidate || nameCellCandidate.textContent.trim().length === 0;
+                const numbersEmpty = numberCellsCandidate.every(c => c.textContent.trim().length === 0);
+
+                if (nameEmpty && numbersEmpty) {
+                    foundRow = candidate;
+                    console.warn(`[handleTablePaste] Usando fila ${searchIdx} después de buscar desde el principio para línea ${i+1}`);
+                    break;
+                }
+            }
+        }
+
+        // Si aún no encontramos una fila vacía, usar currentIndex aunque sobrescriba
         if (!foundRow) {
             foundRow = tbody.querySelector(`tr[data-row-id="${currentIndex}"]`);
+            if (foundRow) {
+                console.warn(`[handleTablePaste] Sobrescribiendo fila ${currentIndex} para línea ${i+1} - no hay filas vacías disponibles`);
+            }
         }
 
         if (!foundRow) {
@@ -1545,12 +1567,10 @@ function updateCalculatedStats() {
     const ganadores = completePlayers.filter(player => player.hits === thresholdHits);
     const cantidadGanadores = ganadores.length; // Total de ganadores (pagados y gratis)
     
-    const ganadoresPagados = ganadores.filter(player => player.gratis === false);
-    const cantidadGanadoresPagados = ganadoresPagados.length; // Solo ganadores que pagaron
     // 6. Calcular premio por ganador (pagado) SOLO si hay ganadores en el umbral fijo
     premioPorGanador = 0; // Resetear antes de calcular
-    if (cantidadGanadoresPagados > 0) {
-        premioPorGanador = Math.floor(pozoTotal / cantidadGanadoresPagados);
+    if (cantidadGanadores > 0) {
+        premioPorGanador = Math.floor(pozoTotal / cantidadGanadores);
 
         // 7. Aplicar premio garantizado si es necesario
         if (premioPorGanador < garantizado) {
@@ -1571,7 +1591,7 @@ function updateCalculatedStats() {
     updateStatDisplay('acumulado', acumulado);
     updateStatDisplay('winners', cantidadGanadores);
     updateStatDisplay('premios', cantidadGanadores > 0 ? Math.floor(pozoTotal / cantidadGanadores) : 0);
-    updateStatDisplay('prize', pozoTotal);
+    updateStatDisplay('prize', pozoTotal);  
     updateStatDisplay('totalPrizePool', pozoTotal);
     updateStatDisplay('total', premioTotal)
 }
@@ -2301,10 +2321,21 @@ async function loadTicketsFromSupabase() {
                 deduped.push(ticketData);
             }
 
-            // Ahora poblar filas con los registros deduplicados
-            deduped.forEach((ticketData, index) => {
-                if (ticketData.nombre_jugador && index < rows.length) {
-                    const row = rows[index]; // La fila <tr>
+            console.log(`[loadTicketsFromSupabase] Cargados ${deduped.length} tickets únicos para ${currentGameType}`);
+
+            // Crear un mapa de rowId a ticketData para poblar las filas correctamente
+            const ticketMap = new Map();
+            deduped.forEach((ticket, index) => {
+                const rowId = index + 1; // Siempre asumir orden secuencial para las primeras filas
+                ticketMap.set(rowId, ticket);
+                console.log(`[loadTicketsFromSupabase] Mapeando ticket ${index + 1} (ID: ${ticket.id || 'N/A'}) a fila ${rowId}`);
+            });
+
+            // Poblar filas usando el rowId en lugar del índice
+            rows.forEach(row => {
+                const rowId = parseInt(row.dataset.rowId, 10);
+                const ticketData = ticketMap.get(rowId);
+                if (ticketData && ticketData.nombre_jugador) {
                     const cells = row.cells; // La colección de <td>
 
                     // Poblar la UI
@@ -2324,6 +2355,9 @@ async function loadTicketsFromSupabase() {
 
                     // Poblar el array de jugadores en memoria, incluyendo 'gratis' y 'dbId'
                     updatePlayerData(row, ticketData.gratis, ticketData.id, false); // false para no guardar
+                    console.log(`[loadTicketsFromSupabase] Poblada fila ${rowId} con nombre: ${ticketData.nombre_jugador}`);
+                } else {
+                    console.log(`[loadTicketsFromSupabase] Fila ${rowId} queda vacía (no hay ticket asignado)`);
                 }
             });
         }
