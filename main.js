@@ -1498,9 +1498,6 @@ function updatePlayerData(row, isGratis = null, dbId = null) {
         }
     }
     
-    // Verificar si la fila está completa
-    const isComplete = name !== '' && playerNumbers.length === numCount;
-    
     // Actualizar o crear entrada del jugador
     const existingPlayerIndex = targetPlayersArray.findIndex(p => p.id === playerId);
     const existingPlayer = existingPlayerIndex >= 0 ? targetPlayersArray[existingPlayerIndex] : {};
@@ -1510,7 +1507,7 @@ function updatePlayerData(row, isGratis = null, dbId = null) {
         name: name,
         numbers: playerNumbers,
         hits: 0,
-        isComplete: isComplete,
+        isComplete: true,
         gratis: isGratis !== null ? isGratis : (existingPlayer.gratis || false)
     };
     
@@ -1526,8 +1523,7 @@ function updatePlayerData(row, isGratis = null, dbId = null) {
 // Función para actualizar contador de jugadas
 function updatePlaysCounter() {
     const currentPlayers = currentGameType === 'polla' ? pollaPlayers : microPlayers;
-    const completePlayers = currentPlayers.filter(p => p.isComplete);
-    playsCount = completePlayers.length;
+    playsCount = currentPlayers.length;
     document.getElementById('playsCount').textContent = playsCount;
     
     const jugadasId = currentGameType === 'polla' ? 'pollaTableJugadas' : 'microTableJugadas';
