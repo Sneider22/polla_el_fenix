@@ -34,113 +34,141 @@
 </head>
 <body class="bg-gradient-to-br from-background-1 to-background-2 max-w-[98vw] mx-auto min-h-screen mb-5">
     <div class="container mx-auto p-4">
-        <div class="text-center mb-8">
-            <h1 class="results-title text-3xl sm:text-4xl font-bold text-[#a61c00] mb-2 drop-shadow-lg">🐦‍🔥 RESULTADOS POLLA EL FÉNIX 🐦‍🔥</h1>
+        <div class="text-center mb-4 sm:mb-6 lg:mb-8">
+            <h1 class="results-title text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-[#a61c00] mb-2 drop-shadow-lg">🐦‍🔥 RESULTADOS POLLA EL FÉNIX 🐦‍🔥</h1>
         </div>
 
-        <div class="flex justify-center mb-8 bg-white/20 rounded-full p-1 max-w-sm mx-auto">
-            <button class="tab-btn flex-1 py-2 px-4 rounded-full font-bold text-white transition-all" data-game="polla">Polla (6 Números)</button>
-            <button class="tab-btn flex-1 py-2 px-4 rounded-full font-bold text-white transition-all" data-game="micro">Micro (3 Números)</button>
+        <div class="flex justify-center mb-4 sm:mb-6 lg:mb-8 bg-white/20 rounded-full p-1 max-w-sm mx-auto">
+            <button class="tab-btn flex-1 py-1.5 sm:py-2 px-2 sm:px-4 text-sm sm:text-base rounded-full font-bold text-white transition-all" data-game="polla">Polla (6 Números)</button>
+            <button class="tab-btn flex-1 py-1.5 sm:py-2 px-2 sm:px-4 text-sm sm:text-base rounded-full font-bold text-white transition-all" data-game="micro">Micro (3 Números)</button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 justify-center items-center">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-8 justify-center items-center">
             <!-- Columna Izquierda: Números Ganadores y Estadísticas -->
-            <div class="lg:col-span-1 space-y-6">
-                <div class="bg-white rounded-lg shadow-lg p-4">
-                    <h2 class="text-lg font-bold text-gray-800 text-center mb-4">Resultados del día</h2>
-                    <div class="grid grid-cols-6 sm:grid-cols-8 gap-2 justify-center" id="winningNumbersGrid">
+            <div class="md:col-span-1 xl:col-span-1 space-y-3 sm:space-y-4">
+                <div class="bg-white rounded-lg shadow-lg p-2 sm:p-3 lg:p-4 overflow-hidden">
+                    <h2 class="text-sm sm:text-base lg:text-lg font-bold text-gray-800 text-center mb-2 sm:mb-3 lg:mb-4">Resultados del día</h2>
+                    <div class="flex flex-wrap justify-center gap-1 sm:gap-2 max-w-full overflow-x-auto pb-1" id="winningNumbersGrid">
                         <!-- Los números ganadores se cargarán aquí -->
                     </div>
                 </div>
 
-                <section class="bg-white rounded-lg shadow-lg p-4">
-                    <article class="grid grid-cols-2 gap-4">
-                        <div class="text-center bg-gray-100 p-2 rounded-lg">
-                            <div class="text-xl sm:text-2xl font-bold text-fenix-blue" id="totalPlayersResult">0</div>
-                            <div class="text-sm font-semibold text-gray-600">Total Jugadas</div>
-                        </div>
-                        <div class="text-center bg-gray-100 p-2 rounded-lg">
-                            <div class="text-xl sm:text-2xl font-bold text-fenix-green" id="totalWinnersResult">0</div>
-                            <div class="text-sm font-semibold text-gray-600" id="winnerLabel">Ganadores</div>
-                        </div>
-                        <div class="text-center bg-gray-100 p-2 rounded-lg">
-                            <div class="text-xl sm:text-2xl font-bold text-fenix-orange" id="totalPrizeResult">0</div>
-                            <div class="text-sm font-semibold text-gray-600">Premio Total</div>
-                        </div>
-                        <div class="text-center bg-gray-100 p-2 rounded-lg">
-                            <div class="text-xl sm:text-2xl font-bold text-fenix-purple" id="prizePerWinnerResult">0</div>
-                            <div class="text-sm font-semibold text-gray-600">Premio por Ganador</div>
-                        </div>
-            </article>
-                </section>
-            </div>
-            <div class="flex-shrink-0 md:mr-8">
-                <img src="Logo Fenix.png" alt="Logo Polla El Fénix" class="w-full h-auto">
-            </div>
-            <div class="w-full  rounded-lg shadow-md p-4 mb-4">
-                <div class="flex flex-col md:flex-row items-center justify-center gap-8">
-                    
-                    
-                    <!-- Columna para Valor y Pago Móvil -->
-                    <div class="flex flex-col items-center md:items-start space-y-4">
-                        
-                        <!-- Pago Móvil -->
-                        <div class="bg-white border-2 border-blue-100 rounded-lg p-4 shadow-sm w-full max-w-xs text-center">
-                            <div class="font-extrabold text-blue-800 text-lg mb-3 tracking-wide">PAGO MÓVIL<!-- Valor -->
-                            </div>
-                        <div id="precioJugadaResult" class="bg-yellow-400 text-black font-bold text-lg px-4 py-1 rounded-lg shadow-md w-full">
-                            VALOR: <span id="precioJugadaResultValue">50</span> BS
-                        </div>
-                            <div id="pagoMovilData" class="grid grid-cols-2 gap-2 mb-3">
-                                <div class="bg-blue-50 p-2 rounded-lg col-span-2">
-                                    <div class="text-xs font-medium text-blue-600">TELÉFONO</div>
-                                    <div class="font-bold text-sm text-blue-900" id="pagoMovilTelefono">0424-303-5092</div>
-                                </div>
-                                <div class="bg-blue-50 p-2 rounded-lg">
-                                    <div class="text-xs font-medium text-blue-600">CÉDULA</div>
-                                    <div class="font-bold text-sm text-blue-900" id="pagoMovilCedula">V-27.863.570</div>
-                                </div>
-                                <div class="bg-blue-50 p-2 rounded-lg">
-                                    <div class="text-xs font-medium text-blue-600">BANCO</div>
-                                    <div class="font-bold text-sm text-blue-900" id="pagoMovilBanco">0134</div>
+                <!-- Estadísticas más compactas -->
+                <section class="bg-white rounded-lg shadow-lg p-2 sm:p-3">
+                    <div class="mb-2 sm:mb-3">
+                        <h3 class="text-xs sm:text-sm font-bold text-gray-700 text-center flex items-center justify-center gap-1">
+                            📊 <span>ESTADÍSTICAS</span>
+                        </h3>
+                    </div>
+                    <div class="grid grid-cols-2 grid-rows-2 gap-1.5 sm:gap-2">
+                        <div class="group relative bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 p-1.5 sm:p-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border border-blue-200/50 hover:border-blue-300">
+                            <div class="absolute inset-0 bg-gradient-to-br from-fenix-blue/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative text-center">
+                                <div class="text-sm sm:text-base font-bold text-fenix-blue mb-0.5 group-hover:scale-105 transition-transform duration-300" id="totalPlayersResult">0</div>
+                                <div class="text-xs font-semibold text-blue-700 flex items-center justify-center">
+                                    <span class="ml-1">Jugadas</span>
                                 </div>
                             </div>
-                            <button id="copyPagoMovil" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                                Copiar Datos
-                            </button>
+                        </div>
+                        <div class="group relative bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 p-1.5 sm:p-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border border-green-200/50 hover:border-green-300">
+                            <div class="absolute inset-0 bg-gradient-to-br from-fenix-green/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative text-center">
+                                <div class="text-sm sm:text-base font-bold text-fenix-green mb-0.5 group-hover:scale-105 transition-transform duration-300" id="totalWinnersResult">0</div>
+                                <div class="text-xs font-semibold text-green-700 flex items-center justify-center">
+                                    <span class="ml-1">Ganadores</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="group relative bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 p-1.5 sm:p-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border border-orange-200/50 hover:border-orange-300">
+                            <div class="absolute inset-0 bg-gradient-to-br from-fenix-orange/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative text-center">
+                                <div class="text-sm sm:text-base font-bold text-fenix-orange mb-0.5 group-hover:scale-105 transition-transform duration-300" id="totalPrizeResult">0</div>
+                                <div class="text-xs font-semibold text-orange-700 flex items-center justify-center">
+                                    <span class="ml-1">Premio Total</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="group relative bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 p-1.5 sm:p-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border border-purple-200/50 hover:border-purple-300">
+                            <div class="absolute inset-0 bg-gradient-to-br from-fenix-purple/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative text-center">
+                                <div class="text-sm sm:text-base font-bold text-fenix-purple mb-0.5 group-hover:scale-105 transition-transform duration-300" id="prizePerWinnerResult">0</div>
+                                <div class="text-xs font-semibold text-purple-700 flex items-center justify-center">
+                                    <span class="ml-1">Ganador</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
 
+            <!-- Logo más pequeño en móvil -->
+            <div class="flex-shrink-0 order-first md:order-none mb-3 md:mb-0">
+                <img src="Logo Fenix.png" alt="Logo Polla El Fénix" class="max-sm:w-48 md:w-[90%] h-auto mx-auto">
+            </div>
+
+            <!-- Pago Móvil más compacto -->
+            <div class="md:col-span-1 xl:col-span-1 order-last md:order-none mb-4">
+                <div class="bg-white border-2 border-blue-100 rounded-lg p-2 sm:p-3 shadow-sm w-full max-w-xs mx-auto text-center">
+                    <!-- Header más compacto -->
+                    <div class="mb-2 sm:mb-3">
+                        <div class="font-extrabold text-blue-800 text-sm sm:text-base tracking-wide mb-1">💳 PAGO MÓVIL</div>
+                        <div id="precioJugadaResult" class="bg-yellow-400 text-black font-bold text-sm sm:text-base px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg shadow-md w-full">
+                            VALOR: <span id="precioJugadaResultValue">50</span> BS
+                        </div>
+                    </div>
+
+                    <!-- Datos más compactos -->
+                    <div id="pagoMovilData" class="grid grid-cols-2 gap-1 sm:gap-2 mb-2 sm:mb-3">
+                        <div class="bg-blue-50 p-1 sm:p-2 rounded-lg col-span-2">
+                            <div class="text-xs font-medium text-blue-600">📞 TELÉFONO</div>
+                            <div class="font-bold text-xs text-blue-900" id="pagoMovilTelefono">0424-303-5092</div>
+                        </div>
+                        <div class="bg-blue-50 p-1 sm:p-2 rounded-lg">
+                            <div class="text-xs font-medium text-blue-600">🆔 CÉDULA</div>
+                            <div class="font-bold text-xs text-blue-900" id="pagoMovilCedula">V-27.863.570</div>
+                        </div>
+                        <div class="bg-blue-50 p-1 sm:p-2 rounded-lg">
+                            <div class="text-xs font-medium text-blue-600">🏦 BANCO</div>
+                            <div class="font-bold text-xs text-blue-900" id="pagoMovilBanco">0134</div>
+                        </div>
+                    </div>
+
+                    <!-- Botón compacto -->
+                    <button id="copyPagoMovil" class="w-full bg-blue-600 text-white font-bold py-1 sm:py-1.5 px-2 sm:px-3 rounded-lg hover:bg-blue-700 transition-colors text-xs">
+                        📋 Copiar Datos
+                    </button>
+                </div>
+            </div>
+        </div>
+
             <!-- Columna Derecha: Tabla de Resultados -->
-            <div class="lg:col-span-3 relative">
+            <div class="md:col-span-2 xl:col-span-3 relative">
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden w-full max-w-full">
                     <!-- Loading Spinner Overlay -->
                     <div id="loadingOverlay" class="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-20 hidden">
                         <div class="flex items-center space-x-2">
-                            <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg class="animate-spin h-6 sm:h-8 w-6 sm:w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            <span class="text-lg font-semibold text-gray-700">Cargando datos...</span>
+                            <span class="text-sm sm:text-lg font-semibold text-gray-700">Cargando datos...</span>
                         </div>
                     </div>
 
-                    <!-- Search Bar -->
-                    <div class="p-4 border-b">
-                        <input type="text" id="searchInput" placeholder="Buscar por nombre de jugador..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <!-- Search Bar más compacta -->
+                    <div class="p-2 sm:p-3 lg:p-4 border-b">
+                        <input type="text" id="searchInput" placeholder="🔍 Buscar por nombre de jugador..." class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <div class="overflow-x-auto w-full">
-                        <table class="table-auto w-full text-sm text-left text-gray-500">
+                        <table class="table-auto w-full text-xs sm:text-sm text-left text-gray-500">
                             <thead class="text-xs text-white uppercase bg-green-600">
                                 <tr>
-                                    <th scope="col" class="px-2 sm:px-3 py-2 text-center">#</th>
-                                    <th scope="col" class="px-2 sm:px-3 py-2">NOMBRE</th>
-                                    <th scope="col" class="px-2 sm:px-3 py-2 text-center">NÚMEROS</th>
-                                    <th scope="col" class="px-2 sm:px-3 py-2 text-center">ACIERTOS</th>
-                                    <th scope="col" class="px-2 sm:px-3 py-2 text-center">PREMIO</th>
+                                    <th scope="col" class="px-1 sm:px-2 lg:px-3 py-1.5 sm:py-2 text-center">#</th>
+                                    <th scope="col" class="px-1 sm:px-2 lg:px-3 py-1.5 sm:py-2">NOMBRE</th>
+                                    <th scope="col" class="px-1 sm:px-2 lg:px-3 py-1.5 sm:py-2 text-center">NÚMEROS</th>
+                                    <th scope="col" class="px-1 sm:px-2 lg:px-3 py-1.5 sm:py-2 text-center">ACIERTOS</th>
+                                    <th scope="col" class="px-1 sm:px-2 lg:px-3 py-1.5 sm:py-2 text-center">PREMIO</th>
                                 </tr>
                             </thead>
                             <tbody id="resultsTableBody">
