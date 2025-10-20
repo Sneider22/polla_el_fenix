@@ -511,17 +511,40 @@ async function truncateJugadasPolla() {
     }
 }
 
-// Función para truncar todas las jugadas de micro
-async function truncateJugadasMicro() {
+// Función para resetear todos los datos de juegos
+async function resetAllGameData() {
     try {
-        const { error } = await supabaseClient
-            .from('jugadas_micro')
-            .delete()
-            .neq('id', 0); // Eliminar todas las filas
-        if (error) throw error;
+        // Resetear jugadas de polla
+        const pollaResult = await JugadasPollaDB.deleteAll();
+        if (!pollaResult.success) {
+            throw new Error(`Error al resetear jugadas de polla: ${pollaResult.error}`);
+        }
+
+        // Resetear jugadas de micro
+        const microResult = await JugadasMicroDB.deleteAll();
+        if (!microResult.success) {
+            throw new Error(`Error al resetear jugadas de micro: ${microResult.error}`);
+        }
+
+        // Resetear resultados de polla
+        const resultadosPollaResult = await ResultadosNumerosDB.deleteAll();
+        if (!resultadosPollaResult.success) {
+            throw new Error(`Error al resetear resultados de polla: ${resultadosPollaResult.error}`);
+        }
+
+        // Resetear resultados de micro
+        const resultadosMicroResult = await ResultadosMicroDB.deleteAll();
+        if (!resultadosMicroResult.success) {
+            throw new Error(`Error al resetear resultados de micro: ${resultadosMicroResult.error}`);
+        }
+
+        // Resetear potes (opcional - dependiendo de si se quiere mantener o no)
+        // await PotesDB.eliminar('polla');
+        // await PotesDB.eliminar('micro');
+
         return { success: true };
     } catch (error) {
-        console.error('Error al truncar jugadas_micro:', error);
+        console.error('Error al resetear todos los datos de juegos:', error);
         return { success: false, error: error.message };
     }
 }

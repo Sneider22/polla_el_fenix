@@ -17,10 +17,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
 
+    // Check URL parameters to set initial game type
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameParam = urlParams.get('game');
+    if (gameParam && (gameParam === 'polla' || gameParam === 'micro')) {
+        currentGameType = gameParam;
+    }
+
     setupTabs();
     await loadAndDisplayData();
 
-    // Add search functionality
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', () => {
@@ -80,7 +86,15 @@ function setupTabs() {
 
             currentGameType = newGameType;
             setActiveTab(currentGameType);
-            
+
+            // Update URL with game parameter
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.set('game', currentGameType);
+            window.history.pushState({}, '', newUrl);
+
+            // Update page title
+            document.title = `Resultados ${currentGameType === 'polla' ? 'Polla' : 'Micro'} - El Fénix`;
+
             await loadAndDisplayData();
         });
     });
@@ -200,7 +214,7 @@ async function loadDataFromSupabase() {
             
             // Calcular el pozo total para el premio mayor
             // Restar el pote semanal del pozo total (según especificación)
-            let pozoTotal = recaudadoParaPremio + poteSemanal + garantizado + acumulado;
+            let pozoTotal = recaudadoParaPremio - poteSemanal + garantizado + acumulado;
             // Asegurar que no sea negativo
             if (pozoTotal < 0) pozoTotal = 0;
 
@@ -664,10 +678,45 @@ function generatePreviewImage() {
 
 // Función para actualizar meta tags con la imagen generada
 function updateMetaTags(imageDataUrl) {
-    const currentUrl = window.location.href;
-    document.querySelector('meta[property="og:title"]').setAttribute('content', `Resultados del Día - ${currentGameType === 'polla' ? 'Polla' : 'Micro'} El Fénix`);
-    document.querySelector('meta[property="og:description"]').setAttribute('content', `Resultados de hoy: ${winningNumbers.join(', ')} | Jugadas: ${resultsData.length} | Premio: ${document.getElementById('totalPrizeResult').textContent}`);
-    document.querySelector('meta[property="og:image"]').setAttribute('content', imageDataUrl);
-    document.querySelector('meta[property="og:url"]').setAttribute('content', currentUrl);
-    document.querySelector('meta[name="twitter:card"]').setAttribute('content', 'summary_large_image');
+    try {
+        // Create URL with current game parameter
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set('game', currentGameType);
+
+        // Update og:title
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) {
+            ogTitle.setAttribute('content', `Resultados del Día - ${currentGameType === 'polla' ? 'Polla' : 'Micro'} El Fénix`);
+        }
+
+        // Update og:description with proper null checks
+        const ogDescription = document.querySelector('meta[property="og:description"]');
+        if (ogDescription) {
+            const winningNumbersText = winningNumbers.length > 0 ? winningNumbers.join(', ') : 'No disponibles';
+            const totalPrizeElement = document.getElementById('totalPrizeResult');
+            const prizeText = totalPrizeElement ? totalPrizeElement.textContent : '0 BS';
+
+            ogDescription.setAttribute('content', `Resultados de hoy: ${winningNumbersText} | Jugadas: ${resultsData.length} | Premio: ${prizeText}`);
+        }
+
+        // Update og:image
+        const ogImage = document.querySelector('meta[property="og:image"]');
+        if (ogImage) {
+            ogImage.setAttribute('content', imageDataUrl);
+        }
+
+        // Update og:url
+        const ogUrl = document.querySelector('meta[property="og:url"]');
+        if (ogUrl) {
+            ogUrl.setAttribute('content', currentUrl.toString());
+        }
+
+        // Update twitter:card
+        const twitterCard = document.querySelector('meta[name="twitter:card"]');
+        if (twitterCard) {
+            twitterCard.setAttribute('content', 'summary_large_image');
+        }
+    } catch (error) {
+        console.error('Error updating meta tags:', error);
+    }
 }
