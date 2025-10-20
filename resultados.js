@@ -99,25 +99,34 @@ async function loadDataFromSupabase() {
     let poteSemanal = 0;
     let acumulado = 0;
     let garantizado = 0;
-    let poteDiario = 0;
 
     try {
         // Cargar potes para el juego actual
         const potesResult = await PotesDB.obtener(currentGameType);
-        let potData = null; // Declarar fuera del bloque if
         if (potesResult.success && potesResult.data) {
-            potData = potesResult.data;
+            const potData = potesResult.data;
             acumulado = potData.acumulado || 0;
             garantizado = potData.garantizado || 0;
 
-            // Obtener el día actual para el pote diario automático
+            // Forzar que el pote del día actual sea 143 siempre
             const weekdayMap = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
             const todayName = weekdayMap[new Date().getDay()];
-            poteDiario = potData[todayName] || 0;
-            poteSemanal = potData.poteSemanal || 0;
+
+            const lunes = (todayName === 'lunes') ? 143 : (potData.lunes || 0);
+            const martes = (todayName === 'martes') ? 143 : (potData.martes || 0);
+            const miercoles = (todayName === 'miércoles') ? 143 : (potData.miércoles || 0);
+            const jueves = (todayName === 'jueves') ? 143 : (potData.jueves || 0);
+            const viernes = (todayName === 'viernes') ? 143 : (potData.viernes || 0);
+            const sabado = (todayName === 'sábado') ? 143 : (potData.sábado || 0);
+            const domingo = (todayName === 'domingo') ? 143 : (potData.domingo || 0);
+
+            poteSemanal = lunes + martes + miercoles + jueves + viernes + sabado + domingo;
         } else {
+            // Si no hay datos en BD, aun así el día actual debe aportar 143
             const weekdayMap = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
             const todayName = weekdayMap[new Date().getDay()];
+            // Sumamos 143 para el día actual y 0 para los demás
+            poteSemanal = 143; // porque el día actual siempre vale 143
         }
 
         // Cargar números ganadores según el tipo de juego
@@ -183,18 +192,19 @@ async function loadDataFromSupabase() {
             const maxHits = currentGameType === 'polla' ? 6 : 3;
 
             // Calcular premios
-            const precioJugada = potData ? (potData.precioJugada || 50) : 50;
+            const precioJugada = 50;
             const gratisCount = resultsData.filter(p => p.gratis === true).length;
             const payingPlayersCount = resultsData.length - gratisCount;
             const premioTotal = payingPlayersCount * precioJugada;
             const recaudadoParaPremio = premioTotal * 0.8;
-
-            // Calcular el pozo total para el premio mayor según la nueva fórmula
-            const pozoTotal = recaudadoParaPremio + poteDiario + poteSemanal + acumulado + garantizado;
+            
+            // Calcular el pozo total para el premio mayor
+            // Restar el pote semanal del pozo total (según especificación)
+            let pozoTotal = recaudadoParaPremio + poteSemanal + garantizado + acumulado;
             // Asegurar que no sea negativo
             if (pozoTotal < 0) pozoTotal = 0;
 
-            const winnersWithMaxHits = resultsData.filter(player => player.hits === maxHits);
+            const winnersWithMaxHits = resultsData.filter(player => player.hits === maxHits && !player.gratis);
 
             let prizeForMaxHits = 0;
             if (winnersWithMaxHits.length > 0) {
@@ -208,10 +218,10 @@ async function loadDataFromSupabase() {
 
             // Asignar premios a cada jugador
             resultsData.forEach(player => {
-                if (player.hits === maxHits) {
+                if (player.hits === maxHits && !player.gratis) {
                     player.prize = prizeForMaxHits;
                 } else {
-                    player.prize = 0;
+                    player.prize = 0; // Otros premios se pueden calcular aquí si es necesario
                 }
             });
 
@@ -243,6 +253,7 @@ async function loadDataFromSupabase() {
 
 // Calcular premio según aciertos
 function calculatePrize(hits, isGratis, maxHits, prizeForMaxHits, gameType) {
+    if (isGratis) return 0;
 
     // El premio ya se calcula y asigna en loadDataFromSupabase
     // Esta función puede ser simplificada o eliminada si no se usa en otro lugar.
@@ -282,42 +293,35 @@ async function displaySummaryStats() {
     
     // Cargar datos del pote
     let poteSemanal = 0;
-    let poteDiario = 0;
-   let precioJugada = 50;
+    let precioJugada = 50;
     let garantizado = 0;
     let acumulado = 0;
-    let potData = null;
     const potesResult = await PotesDB.obtener(currentGameType);
+    console.log("potesResult", potesResult.data);
     if (potesResult.success && potesResult.data) {
-        potData = potesResult.data;
+        const potData = potesResult.data;
         precioJugada = potData.precioJugada || 50;
         garantizado = potData.garantizado || 0;
         acumulado = potData.acumulado || 0;
         poteSemanal = potData.poteSemanal || 0;
-        poteDiario = potData.poteDiario || 0;
     } 
-        console.log("potData", potData);
     
     const fullHitWinners = resultsData.filter(player => player.hits === maxPossibleHits);
     const payingPlayersCount = resultsData.filter(player => !player.gratis).length;
+    const payingWinners = fullHitWinners.filter(player => !player.gratis);
 
     const totalCollected = payingPlayersCount * precioJugada;
     const recaudadoParaPremio = totalCollected * 0.8;
-    // Calcular el pozo total para el premio mayor según la nueva fórmula
-    let prizePool = recaudadoParaPremio + poteDiario + poteSemanal + garantizado + acumulado;
-
-    // Calcular premio sin pote semanal (solo recaudación + acumulado + garantizado)
-    let prizePoolWithoutWeekly = recaudadoParaPremio + garantizado + acumulado;
-
+    // Restar el pote semanal del premio total según la nueva regla
+    let prizePool = recaudadoParaPremio + poteSemanal + garantizado + acumulado;
     if (prizePool < 0) prizePool = 0;
-    if (prizePoolWithoutWeekly < 0) prizePoolWithoutWeekly = 0;
 
     let prizePerWinner = 0;
-    if (fullHitWinners.length > 0) {
-        prizePerWinner = Math.floor(prizePool / fullHitWinners.length);
+    if (payingWinners.length > 0) {
+        prizePerWinner = Math.floor(prizePool / payingWinners.length);
     }
     // Aplicar garantizado
-    if (fullHitWinners.length > 0 && prizePerWinner < garantizado) {
+    if (payingWinners.length > 0 && prizePerWinner < garantizado) {
         prizePerWinner = garantizado;
     }
 
@@ -338,11 +342,7 @@ async function displaySummaryStats() {
         winnerLabel.textContent = `Ganadores (${maxPossibleHits} aciertos)`;
     }
     document.getElementById('totalWinnersResult').textContent = fullHitWinners.length;
-
-    // Mostrar premio sin pote semanal y con pote semanal
-    document.getElementById('totalPrizeWithoutWeekly').textContent = `${prizePoolWithoutWeekly.toFixed(0)} BS`;
-    document.getElementById('totalPrizeWithWeekly').textContent = `${prizePool.toFixed(0)} BS`;
-
+    document.getElementById('totalPrizeResult').textContent = `${prizePool.toFixed(0)} BS`;
     document.getElementById('prizePerWinnerResult').textContent = prizePerWinner > 0 ? `${prizePerWinner} BS` : '0 BS';
 }
 
@@ -350,7 +350,6 @@ async function displaySummaryStats() {
 async function displayResultsTable(dataToDisplay) {
     const tableBody = document.getElementById('resultsTableBody');
     console.log("dataToDisplay", dataToDisplay);
-    
     tableBody.innerHTML = '';
 
     if (dataToDisplay.length === 0) {
@@ -364,6 +363,17 @@ async function displayResultsTable(dataToDisplay) {
         }
         tableBody.appendChild(row);
         return;
+    }
+
+    // Cargar datos del pote para obtener el valor diario
+    let potData = null;
+    try {
+        const potesResult = await PotesDB.obtener(currentGameType);
+        if (potesResult.success && potesResult.data) {
+            potData = potesResult.data;
+        }
+    } catch (error) {
+        console.error("Error cargando datos del pote:", error);
     }
 
     dataToDisplay.forEach((player) => {
@@ -444,10 +454,16 @@ async function displayResultsTable(dataToDisplay) {
         prizeCell.className = 'px-6 py-4 text-center font-bold';
         prizeCell.className = 'px-2 sm:px-6 py-4 text-center font-bold';
         if (player.prize > 0) {
-            // Obtener el premio por ganador desde el elemento de estadísticas para mantener consistencia
-            const prizePerWinnerElement = document.getElementById('prizePerWinnerResult');
-            const prizeText = prizePerWinnerElement ? prizePerWinnerElement.textContent : `${player.prize} BS`;
-            prizeCell.textContent = prizeText;
+            // Obtener el pote diario desde la configuración de la base de datos
+            const weekdayMap = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+            const poteDiario = potData ? potData.poteDiario : 0;
+
+            // Sumar el premio base más el pote diario, acumulado y garantizado proporcionalmente
+            const totalPrize = player.prize + poteDiario;
+            console.log("totalPrize", totalPrize);
+            console.log("player.prize", player.prize);
+            
+            prizeCell.textContent = `${Math.max(0, totalPrize)} BS`;
             prizeCell.className += ' text-black';
         } else {
             prizeCell.textContent = '-';
@@ -538,7 +554,6 @@ async function updateResults() {
     await loadAndDisplayData();
 }
 
-// Función para resetear el juego actual (eliminar todas las jugadas)
 async function resetCurrentGame() {
     // Mostrar modal de confirmación en lugar de confirm()
     const modal = document.getElementById('confirmResetModal');
@@ -568,11 +583,11 @@ async function resetCurrentGame() {
         try {
             let deleteResult;
             if (currentGameType === 'polla') {
-                // Usar la función truncate para eliminar todas las jugadas de polla
-                deleteResult = await truncateJugadasPolla();
+                // Asumo que existe una función `borrarTodas` en el objeto `JugadasPollaDB`
+                deleteResult = await JugadasPollaDB.borrarTodas();
             } else {
-                // Usar la función truncate para eliminar todas las jugadas de micro
-                deleteResult = await truncateJugadasMicro();
+                // Asumo que existe una función `borrarTodas` en el objeto `JugadasMicroDB`
+                deleteResult = await JugadasMicroDB.borrarTodas();
             }
 
             if (deleteResult.success) {
@@ -587,11 +602,7 @@ async function resetCurrentGame() {
             console.error(`Error al intentar resetear las jugadas de ${gameName}:`, error);
             alert('Se produjo un error inesperado. Revisa la consola para más detalles.');
         }
-    };
-
-    // Añadir event listeners
-    cancelBtn.addEventListener('click', onCancel);
-    confirmBtn.addEventListener('click', onConfirm);
+    }
 }
 
 // Función para generar imagen preliminar dinámica
@@ -636,7 +647,7 @@ function generatePreviewImage() {
     ctx.textAlign = 'left';
     ctx.fillText(`Total Jugadas: ${resultsData.length}`, 50, 250);
     ctx.fillText(`Ganadores: ${resultsData.filter(p => p.hits === (currentGameType === 'polla' ? 6 : 3)).length}`, 50, 300);
-    ctx.fillText(`Premio Total: ${document.getElementById('totalPrizeWithWeekly').textContent}`, 50, 350);
+    ctx.fillText(`Premio Total: ${document.getElementById('totalPrizeResult').textContent}`, 50, 350);
     ctx.fillText(`Premio por Ganador: ${document.getElementById('prizePerWinnerResult').textContent}`, 50, 400);
 
     // Logo o imagen adicional (opcional)
@@ -655,27 +666,8 @@ function generatePreviewImage() {
 function updateMetaTags(imageDataUrl) {
     const currentUrl = window.location.href;
     document.querySelector('meta[property="og:title"]').setAttribute('content', `Resultados del Día - ${currentGameType === 'polla' ? 'Polla' : 'Micro'} El Fénix`);
-    document.querySelector('meta[property="og:description"]').setAttribute('content', `Resultados de hoy: ${winningNumbers.join(', ')} | Jugadas: ${resultsData.length} | Premio con pote: ${document.getElementById('totalPrizeWithWeekly').textContent} | Premio por ganador: ${document.getElementById('prizePerWinnerResult').textContent}`);
+    document.querySelector('meta[property="og:description"]').setAttribute('content', `Resultados de hoy: ${winningNumbers.join(', ')} | Jugadas: ${resultsData.length} | Premio: ${document.getElementById('totalPrizeResult').textContent}`);
     document.querySelector('meta[property="og:image"]').setAttribute('content', imageDataUrl);
     document.querySelector('meta[property="og:url"]').setAttribute('content', currentUrl);
     document.querySelector('meta[name="twitter:card"]').setAttribute('content', 'summary_large_image');
 }
-
-// Función para hacer scroll suave a la tabla
-function scrollToTable() {
-    const tableSection = document.getElementById('resultsTableSection');
-    if (tableSection) {
-        tableSection.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        });
-    }
-}
-
-// Agregar event listener al botón flotante cuando se carga la página
-document.addEventListener('DOMContentLoaded', function() {
-    const scrollButton = document.getElementById('scrollToTable');
-    if (scrollButton) {
-        scrollButton.addEventListener('click', scrollToTable);
-    }
-});

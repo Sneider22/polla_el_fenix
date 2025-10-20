@@ -4,26 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados - Polla El Fenix</title>
-   
-    <!-- HTML Meta Tags -->
-<title>Resultados del Día - Polla El Fénix</title>
-<meta name="description" content="Resultados de hoy con números ganadores, total de jugadas y premios.">
-
-<!-- Facebook Meta Tags -->
-<meta property="og:url" content="https://example.com/resultados.html">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Resultados del Día - Polla El Fénix">
-<meta property="og:description" content="Resultados de hoy con números ganadores, total de jugadas y premios.">
-<meta property="og:image" content="https://polla-el-fenix-pearl.vercel.app/Logo Fenix.png">
-
-<!-- Twitter Meta Tags -->
-<meta name="twitter:card" content="summary_large_image">
-<meta property="twitter:url" content="https://example.com/resultados.html">
-<meta name="twitter:title" content="website">
-<meta name="twitter:description" content="Resultados de hoy con números ganadores, total de jugadas y premios.">
-<meta name="twitter:image" content="https://polla-el-fenix-pearl.vercel.app/Logo Fenix.png">
-
-<!-- Meta Tags Generated via https://www.opengraph.io -->
+    <meta property="og:title" content="Resultados del Día - Polla El Fénix">
+    <meta property="og:description" content="Resultados de hoy con números ganadores, total de jugadas y premios.">
+    <meta property="og:image" content="Logo Fenix.png">
+    <meta property="og:url" content="https://example.com/resultados.html">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -60,95 +46,75 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 justify-center items-center">
             <!-- Columna Izquierda: Números Ganadores y Estadísticas -->
             <div class="lg:col-span-1 space-y-6">
-                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow-lg p-3 sm:p-4 border border-yellow-200">
-                    <h2 class="text-base sm:text-lg font-bold text-yellow-800 text-center mb-3 sm:mb-4">🎯 Resultados del Día</h2>
-                    <div class="flex justify-center">
-                        <div class="grid grid-cols-6 sm:grid-cols-8 gap-1 sm:gap-2 max-w-full" id="winningNumbersGrid">
-                            <!-- Los números ganadores se cargarán aquí -->
-                        </div>
+                <div class="bg-white rounded-lg shadow-lg p-4">
+                    <h2 class="text-lg font-bold text-gray-800 text-center mb-4">Resultados del día</h2>
+                    <div class="grid grid-cols-6 sm:grid-cols-8 gap-2 justify-center" id="winningNumbersGrid">
+                        <!-- Los números ganadores se cargarán aquí -->
                     </div>
                 </div>
 
-                <section class="bg-white rounded-lg shadow-lg p-3 sm:p-4">
-                    <h3 class="text-center font-bold mb-3 sm:mb-4 text-gray-800 text-base sm:text-lg">📈 Estadísticas del Día</h3>
-                    <article class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                        <div class="text-center bg-gradient-to-br from-blue-50 to-blue-100 p-3 sm:p-4 rounded-lg shadow-sm border border-blue-200 flex flex-col justify-between min-h-[100px] sm:min-h-[140px]">
-                            <div class="flex-1 flex items-center justify-center">
-                                <div class="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600" id="totalPlayersResult">0</div>
-                            </div>
-                            <div class="text-xs sm:text-sm font-semibold text-blue-700 mt-1 sm:mt-2">👥 Total Jugadas</div>
+                <section class="bg-white rounded-lg shadow-lg p-4">
+                    <article class="grid grid-cols-2 gap-4">
+                        <div class="text-center bg-gray-100 p-2 rounded-lg">
+                            <div class="text-xl sm:text-2xl font-bold text-fenix-blue" id="totalPlayersResult">0</div>
+                            <div class="text-sm font-semibold text-gray-600">Total Jugadas</div>
                         </div>
-                        <div class="text-center bg-gradient-to-br from-green-50 to-emerald-100 p-3 sm:p-4 rounded-lg shadow-sm border border-green-200 flex flex-col justify-between min-h-[100px] sm:min-h-[140px]">
-                            <div class="flex-1 flex flex-col justify-center">
-                                <div class="text-lg sm:text-2xl font-bold text-green-600 mb-1 sm:mb-2" id="totalWinnersResult">0</div>
-                                <div class="text-xs sm:text-sm font-medium text-green-700">Ganadores</div>
-                                <div class="border-t border-green-300 pt-1 sm:pt-2 mt-1 sm:mt-2">
-                                    <div class="text-sm sm:text-lg font-bold text-emerald-600" id="prizePerWinnerResult">0</div>
-                                    <div class="text-xs font-medium text-emerald-700">Premio por Ganador</div>
-                                </div>
-                            </div>
+                        <div class="text-center bg-gray-100 p-2 rounded-lg">
+                            <div class="text-xl sm:text-2xl font-bold text-fenix-green" id="totalWinnersResult">0</div>
+                            <div class="text-sm font-semibold text-gray-600" id="winnerLabel">Ganadores</div>
                         </div>
-                        <div class="text-center bg-gradient-to-br from-gray-50 to-gray-100 p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-between min-h-[100px] sm:min-h-[140px]">
-                            <div class="flex-1 flex flex-col justify-center">
-                                <div class="text-lg sm:text-xl font-bold text-orange-600 mb-1" id="totalPrizeWithoutWeekly">0</div>
-                                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-2">Sin Pote Semanal</div>
-                                <div class="border-t border-gray-300 pt-1 sm:pt-2 mt-1 sm:mt-2">
-                                    <div class="text-lg sm:text-2xl font-bold text-purple-600 mb-1" id="totalPrizeWithWeekly">0</div>
-                                    <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Con Pote Semanal</div>
-                                </div>
-                            </div>
-                            <div class="text-xs sm:text-sm font-semibold text-gray-700 mt-1 sm:mt-2">💰 Premio Total</div>
+                        <div class="text-center bg-gray-100 p-2 rounded-lg">
+                            <div class="text-xl sm:text-2xl font-bold text-fenix-orange" id="totalPrizeResult">0</div>
+                            <div class="text-sm font-semibold text-gray-600">Premio Total</div>
                         </div>
-                    </article>
+                        <div class="text-center bg-gray-100 p-2 rounded-lg">
+                            <div class="text-xl sm:text-2xl font-bold text-fenix-purple" id="prizePerWinnerResult">0</div>
+                            <div class="text-sm font-semibold text-gray-600">Premio por Ganador</div>
+                        </div>
+            </article>
                 </section>
             </div>
             <div class="flex-shrink-0 md:mr-8">
-                <img src="Logo Fenix.png" alt="Logo Polla El Fénix" class="w-full h-auto max-w-[280px] mx-auto">
+                <img src="Logo Fenix.png" alt="Logo Polla El Fénix" class="w-full h-auto">
             </div>
-            <div class="w-full rounded-lg shadow-md p-3 sm:p-4 mb-4 bg-white">
-                <div class="flex flex-col md:flex-row items-center justify-center gap-6 sm:gap-8">
+            <div class="w-full  rounded-lg shadow-md p-4 mb-4">
+                <div class="flex flex-col md:flex-row items-center justify-center gap-8">
+                    
+                    
                     <!-- Columna para Valor y Pago Móvil -->
                     <div class="flex flex-col items-center md:items-start space-y-4">
                         
                         <!-- Pago Móvil -->
-                        <div class="bg-white border-2 border-blue-100 rounded-lg p-3 sm:p-4 shadow-sm w-full max-w-xs text-center">
-                            <div class="font-extrabold text-blue-800 text-base sm:text-lg mb-2 sm:mb-3 tracking-wide">💳 PAGO MÓVIL</div>
-                            <div id="precioJugadaResult" class="bg-yellow-400 text-black font-bold text-base sm:text-lg px-3 sm:px-4 py-1 rounded-lg shadow-md w-full mb-2 sm:mb-3">
-                                VALOR: <span id="precioJugadaResultValue">50</span> BS
+                        <div class="bg-white border-2 border-blue-100 rounded-lg p-4 shadow-sm w-full max-w-xs text-center">
+                            <div class="font-extrabold text-blue-800 text-lg mb-3 tracking-wide">PAGO MÓVIL<!-- Valor -->
                             </div>
-                            <div id="pagoMovilData" class="grid grid-cols-2 gap-2 mb-2 sm:mb-3">
+                        <div id="precioJugadaResult" class="bg-yellow-400 text-black font-bold text-lg px-4 py-1 rounded-lg shadow-md w-full">
+                            VALOR: <span id="precioJugadaResultValue">50</span> BS
+                        </div>
+                            <div id="pagoMovilData" class="grid grid-cols-2 gap-2 mb-3">
                                 <div class="bg-blue-50 p-2 rounded-lg col-span-2">
-                                    <div class="text-xs font-medium text-blue-600">📞 TELÉFONO</div>
-                                    <div class="font-bold text-xs sm:text-sm text-blue-900" id="pagoMovilTelefono">0424-303-5092</div>
+                                    <div class="text-xs font-medium text-blue-600">TELÉFONO</div>
+                                    <div class="font-bold text-sm text-blue-900" id="pagoMovilTelefono">0424-303-5092</div>
                                 </div>
                                 <div class="bg-blue-50 p-2 rounded-lg">
-                                    <div class="text-xs font-medium text-blue-600">🆔 CÉDULA</div>
-                                    <div class="font-bold text-xs sm:text-sm text-blue-900" id="pagoMovilCedula">V-27.863.570</div>
+                                    <div class="text-xs font-medium text-blue-600">CÉDULA</div>
+                                    <div class="font-bold text-sm text-blue-900" id="pagoMovilCedula">V-27.863.570</div>
                                 </div>
                                 <div class="bg-blue-50 p-2 rounded-lg">
-                                    <div class="text-xs font-medium text-blue-600">🏦 BANCO</div>
-                                    <div class="font-bold text-xs sm:text-sm text-blue-900" id="pagoMovilBanco">0134</div>
+                                    <div class="text-xs font-medium text-blue-600">BANCO</div>
+                                    <div class="font-bold text-sm text-blue-900" id="pagoMovilBanco">0134</div>
                                 </div>
                             </div>
-                            <button id="copyPagoMovil" class="w-full bg-blue-600 text-white font-bold py-2 px-3 sm:px-4 rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm">
-                                📋 Copiar Datos
+                            <button id="copyPagoMovil" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                Copiar Datos
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Botón flotante para ir a la tabla (solo visible en móvil) -->
-            <div class="fixed bottom-4 right-4 sm:hidden z-30">
-                <button id="scrollToTable" class="bg-green-600 hover:bg-green-700 text-white rounded-full p-3 shadow-lg transition-all duration-200 animate-bounce">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Tabla de resultados ocupa todo el ancho -->
-            <div class="lg:col-span-3" id="resultsTableSection">
+            <!-- Columna Derecha: Tabla de Resultados -->
+            <div class="lg:col-span-3 relative">
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden w-full max-w-full">
                     <!-- Loading Spinner Overlay -->
                     <div id="loadingOverlay" class="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-20 hidden">
