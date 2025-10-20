@@ -230,7 +230,7 @@ async function loadDataFromSupabase() {
                 prizeForMaxHits = garantizado;
             }
 
-            // Asignar premios a cada jugador
+            // Asignar premios a cada jugador (solo premio mayor)
             resultsData.forEach(player => {
                 if (player.hits === maxHits && !player.gratis) {
                     player.prize = prizeForMaxHits;
