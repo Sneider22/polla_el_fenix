@@ -45,6 +45,3 @@ Desarrollado por: Sneider22 y rmaneiro28
 
 ## Créditos
 Desarrollado por Sneider22 y rmaneiro28
-
----
-Si quieres que añada un apartado con comandos de ejecución o ejemplos de tests automáticos, dímelo y lo agrego.
