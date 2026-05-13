@@ -44,4 +44,7 @@ Desarrollado por: Sneider22 y rmaneiro28
 - Ajustes visuales para accesibilidad (contrastes, tamaño táctil).
 
 ## Créditos
-Desarrollado por Sneider22 y rmaneiro28
+Desarrollado por:
+* [@rmaneiro28](https://github.com/rmaneiro28)
+* [@Sneider22](https://github.com/Sneider22)
+
