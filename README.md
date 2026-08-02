@@ -38,11 +38,6 @@ Desarrollado por: Sneider22 y rmaneiro28
 - El guardado automático usa `JugadoresDB.crear(name)` si `JugadoresDB` ofrece ese método.
 - El filtrado prioriza `startsWith` y luego `includes` para una mejor experiencia de búsqueda.
 
-## Posibles mejoras
-- Añadir debounce al input de autocompletado si hay cientos/miles de jugadores.
-- Persistir en `localStorage` cuando `JugadoresDB` no esté disponible para mantener nombres entre sesiones locales.
-- Ajustes visuales para accesibilidad (contrastes, tamaño táctil).
-
 ## Créditos
 Desarrollado por:
 * [@rmaneiro28](https://github.com/rmaneiro28)
